@@ -842,35 +842,241 @@
             const companySelection = document.getElementById('companySelection');
             const accumulatedData = document.getElementById('accumulatedData');
             
-            // CORREÇÃO PARA SELEÇÃO DE EMPRESAS
+            // Variáveis de estado
             let selectedCompany = null;
-            const companyCards = companySelection ? companySelection.querySelectorAll('.company-card') : [];
+            let selectedFile = null;
+            let importedData = [];
+            let filteredData = [];
+            let currentPage = 1;
+            let itemsPerPageValue = 25;
+
+            // 1. SELEÇÃO DE EMPRESA - CORREÇÃO
+            const companyCards = companySelection.querySelectorAll('.company-card');
             
-            if (companyCards.length > 0) {
-                companyCards.forEach(card => {
-                    card.addEventListener('click', function() {
-                        // Remove seleção anterior
-                        companyCards.forEach(c => c.classList.remove('selected'));
-                        
-                        // Adiciona seleção ao card clicado
-                        this.classList.add('selected');
-                        
-                        // Armazena a empresa selecionada
-                        selectedCompany = this.getAttribute('data-company');
-                        console.log('Empresa selecionada:', selectedCompany);
-                        
-                        // Habilita o botão de importação se já tiver arquivo selecionado
-                        if (excelFileInput.files.length > 0) {
-                            importBtn.disabled = false;
-                        }
-                    });
+            companyCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    // Remove seleção anterior
+                    companyCards.forEach(c => c.classList.remove('selected'));
+                    
+                    // Adiciona seleção ao card clicado
+                    this.classList.add('selected');
+                    
+                    // Armazena a empresa selecionada
+                    selectedCompany = this.getAttribute('data-company');
+                    console.log('Empresa selecionada:', selectedCompany);
+                    
+                    // Habilita o botão de importação se já tiver arquivo selecionado
+                    if (selectedFile) {
+                        importBtn.disabled = false;
+                    }
                 });
-            } else {
-                console.error('Nenhum card de empresa encontrado! Verifique o HTML.');
+            });
+
+            // 2. SELEÇÃO DE ARQUIVO - CORREÇÃO
+            selectFileBtn.addEventListener('click', function() {
+                excelFileInput.click();
+            });
+
+            excelFileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    selectedFile = this.files[0];
+                    setFileInfo(`Arquivo selecionado: ${selectedFile.name}`, 'info');
+                    
+                    // Habilita o botão de importação se já tiver empresa selecionada
+                    importBtn.disabled = !selectedCompany;
+                } else {
+                    selectedFile = null;
+                    setFileInfo('', 'info');
+                    importBtn.disabled = true;
+                }
+            });
+
+            // 3. PROCESSAMENTO DO UPLOAD - CORREÇÃO
+            importBtn.addEventListener('click', function() {
+                if (!selectedCompany) {
+                    setFileInfo('Selecione uma empresa antes de importar', 'error');
+                    return;
+                }
+
+                if (!selectedFile) {
+                    setFileInfo('Nenhum arquivo selecionado', 'error');
+                    return;
+                }
+
+                // Mostra loading
+                showLoading(true);
+                setFileInfo(`Processando arquivo para ${selectedCompany}...`, 'info');
+                progressBar.style.display = 'block';
+
+                // Processa o arquivo
+                processExcel(selectedFile, selectedCompany);
+            });
+
+            // Função para mostrar/ocultar loading
+            function showLoading(show) {
+                if (show) {
+                    loadingSpinner.style.display = 'inline-block';
+                    importBtn.disabled = true;
+                } else {
+                    loadingSpinner.style.display = 'none';
+                    importBtn.disabled = false;
+                }
             }
-            
-            // Restante do seu código JavaScript permanece igual...
-            // ... (todo o resto do seu código de processamento, filtros, etc)
+
+            // Função para mostrar informações do arquivo
+            function setFileInfo(message, type = 'info') {
+                fileInfo.textContent = message;
+                fileInfo.className = '';
+                fileInfo.classList.add(`file-${type}`);
+            }
+
+            // Função para processar o Excel
+            function processExcel(file, company) {
+                showProgress(10);
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        showProgress(30);
+                        
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { 
+                            type: 'array', 
+                            cellDates: true,
+                            sheetStubs: true
+                        });
+                        
+                        showProgress(60);
+                        
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+                            header: 1, 
+                            raw: true, 
+                            defval: null,
+                            dateNF: 'dd/mm/yyyy'
+                        });
+                        
+                        showProgress(80);
+                        
+                        let headerRow = 0;
+                        let aIndex = 0, cIndex = 2, dIndex = 3, eIndex = 4;
+                        
+                        // Detecta automaticamente as colunas relevantes
+                        for (let i = 0; i < Math.min(5, jsonData.length); i++) {
+                            const row = jsonData[i];
+                            if (row && Array.isArray(row)) {
+                                const headerTexts = row.map(cell => cell ? cell.toString().toLowerCase().trim() : '');
+                                
+                                if (headerTexts.includes('dom.fiscal') || headerTexts.includes('município') || 
+                                    headerTexts.includes('municipio') || headerTexts.includes('local')) {
+                                    headerRow = i;
+                                    aIndex = headerTexts.findIndex(text => 
+                                        text.includes('dom.fiscal') || text.includes('município') || 
+                                        text.includes('municipio') || text.includes('local'));
+                                    cIndex = headerTexts.findIndex(text => 
+                                        text.includes('competência') || text.includes('competencia') || 
+                                        text.includes('periodo') || text.includes('período'));
+                                    dIndex = headerTexts.findIndex(text => 
+                                        (text.includes('base') && text.includes('cálculo')) || 
+                                        (text.includes('base') && text.includes('calculo')) ||
+                                        text.includes('valor serviço') || text.includes('valor servico'));
+                                    eIndex = headerTexts.findIndex(text => 
+                                        (text.includes('valor') && (text.includes('imposto') || text.includes('iss'))) ||
+                                        text.includes('valor iss') || text.includes('valor imposto'));
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        const newData = [];
+                        for (let i = headerRow + 1; i < jsonData.length; i++) {
+                            const row = jsonData[i];
+                            if (!row || !Array.isArray(row)) continue;
+                            
+                            const municipio = row[aIndex];
+                            const competencia = row[cIndex];
+                            let baseCalculo = row[dIndex];
+                            let valorISS = row[eIndex];
+                            
+                            // Formatação de valores
+                            if (typeof baseCalculo === 'string') {
+                                baseCalculo = parseFloat(baseCalculo.replace(/[^\d,-]/g, '').replace(',', '.'));
+                            }
+                            if (typeof valorISS === 'string') {
+                                valorISS = parseFloat(valorISS.replace(/[^\d,-]/g, '').replace(',', '.'));
+                            }
+                            
+                            // Formatação de datas
+                            let competenciaFormatada = '';
+                            if (competencia instanceof Date) {
+                                competenciaFormatada = competencia.toLocaleDateString('pt-BR');
+                            } else if (competencia) {
+                                competenciaFormatada = competencia.toString().trim();
+                            }
+                            
+                            if (municipio && !isNaN(baseCalculo)) {
+                                newData.push({
+                                    empresa: company,
+                                    municipio: municipio.toString().trim(),
+                                    competencia: competenciaFormatada,
+                                    baseCalculo: baseCalculo || 0,
+                                    valorISS: !isNaN(valorISS) ? valorISS : 0,
+                                    aliquota: calculatePercentage(baseCalculo, !isNaN(valorISS) ? valorISS : 0),
+                                    status: 'pendente',
+                                    observacao: '',
+                                    arquivo: file.name,
+                                    dataImportacao: new Date().toLocaleString('pt-BR')
+                                });
+                            }
+                        }
+                        
+                        if (newData.length === 0) {
+                            throw new Error("Nenhum dado válido encontrado no arquivo. Verifique o formato.");
+                        }
+                        
+                        // Adiciona os novos dados aos existentes
+                        importedData = [...importedData, ...newData];
+                        
+                        setFileInfo(`Arquivo processado com sucesso para ${company}! ${newData.length} registros importados.`, 'success');
+                        updateFilters();
+                        filterData();
+                        updateSummary();
+                        updateAccumulatedData();
+                        
+                        exportExcelBtn.disabled = false;
+                        exportPDFBtn.disabled = false;
+                        
+                    } catch (error) {
+                        console.error("Erro ao processar arquivo:", error);
+                        setFileInfo(`Erro: ${error.message}`, 'error');
+                    } finally {
+                        showLoading(false);
+                        hideProgress();
+                    }
+                };
+                
+                reader.onerror = function() {
+                    setFileInfo("Erro ao ler o arquivo. Tente novamente.", 'error');
+                    showLoading(false);
+                    hideProgress();
+                };
+                
+                reader.readAsArrayBuffer(file);
+            }
+
+            // Função para mostrar progresso
+            function showProgress(percentage) {
+                progress.style.width = `${percentage}%`;
+            }
+
+            // Função para ocultar barra de progresso
+            function hideProgress() {
+                progressBar.style.display = 'none';
+                progress.style.width = '0%';
+            }
 
             // Função para formatar moeda
             function formatCurrency(value) {
@@ -889,26 +1095,105 @@
                 return percentage.toFixed(2) + '%';
             }
 
-            // Resto das funções (processExcel, updateFilters, filterData, etc...)
-            // ... (mantenha todas as outras funções do seu código original)
+            // ... (mantenha as outras funções do seu código original como updateFilters, filterData, etc.)
 
-            // Event listeners
-            selectFileBtn.addEventListener('click', function() {
-                excelFileInput.click();
+            // Restante dos event listeners
+            filterEmpresa.addEventListener('change', function() {
+                currentPage = 1;
+                filterData();
             });
             
-            excelFileInput.addEventListener('change', function() {
-                if (this.files.length > 0) {
-                    setFileInfo(`Arquivo selecionado: ${this.files[0].name}`, 'info');
-                    // Só habilita o botão de importar se uma empresa foi selecionada
+            filterMunicipio.addEventListener('change', function() {
+                currentPage = 1;
+                filterData();
+            });
+            
+            filterCompetencia.addEventListener('change', function() {
+                currentPage = 1;
+                filterData();
+            });
+            
+            filterPeriodo.addEventListener('change', function() {
+                currentPage = 1;
+                filterData();
+            });
+            
+            searchInput.addEventListener('input', function() {
+                currentPage = 1;
+                filterData();
+            });
+            
+            exportExcelBtn.addEventListener('click', exportToExcel);
+            exportPDFBtn.addEventListener('click', exportToPDF);
+            
+            resetFiltersBtn.addEventListener('click', function() {
+                filterEmpresa.value = '';
+                filterMunicipio.value = '';
+                filterCompetencia.value = '';
+                filterPeriodo.value = '';
+                searchInput.value = '';
+                currentPage = 1;
+                filterData();
+            });
+            
+            // Drag and drop
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('highlight');
+            });
+            
+            dropZone.addEventListener('dragleave', function() {
+                this.classList.remove('highlight');
+            });
+            
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('highlight');
+                
+                if (e.dataTransfer.files.length) {
+                    excelFileInput.files = e.dataTransfer.files;
+                    selectedFile = e.dataTransfer.files[0];
+                    setFileInfo(`Arquivo selecionado: ${selectedFile.name}`, 'info');
                     importBtn.disabled = !selectedCompany;
-                } else {
-                    setFileInfo('', 'info');
-                    importBtn.disabled = true;
                 }
             });
             
-            // ... (demais event listeners do seu código original)
+            // Tabs
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Ativa tab clicada
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Mostra conteúdo correspondente
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === `${tabId}-tab`) {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+            
+            // Controle do modal de edição
+            editForm.addEventListener('submit', saveEdit);
+            cancelEditBtn.addEventListener('click', closeEditModal);
+            deleteBtn.addEventListener('click', function() {
+                const index = document.getElementById('editIndex').value;
+                closeEditModal();
+                confirmDelete(index);
+            });
+            
+            // Fecha o modal ao clicar fora
+            window.addEventListener('click', function(event) {
+                if (event.target === editModal) {
+                    closeEditModal();
+                }
+            });
+
+            // ... (implemente as outras funções do seu código como updateTable, updatePagination, etc.)
         });
     </script>
 </body>

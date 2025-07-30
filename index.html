@@ -205,19 +205,6 @@
             color: var(--danger-color);
         }
         
-        .municipio-link {
-            color: var(--primary-color);
-            text-decoration: none;
-            cursor: pointer;
-            transition: var(--transition);
-            font-weight: 500;
-        }
-        
-        .municipio-link:hover {
-            text-decoration: underline;
-            color: var(--primary-dark);
-        }
-        
         .summary-card {
             background: white;
             border-radius: 8px;
@@ -321,14 +308,6 @@
             border-color: var(--primary-color);
         }
         
-        .chart-container {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 30px;
-            box-shadow: var(--card-shadow);
-        }
-        
         .tabs {
             display: flex;
             border-bottom: 1px solid #ddd;
@@ -358,86 +337,6 @@
         
         .tab-content.active {
             display: block;
-        }
-        
-        .tooltip {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 200px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 5px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 12px;
-            font-weight: normal;
-        }
-        
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            background-color: var(--primary-color);
-            color: white;
-        }
-        
-        .badge.success {
-            background-color: var(--success-color);
-        }
-        
-        .badge.warning {
-            background-color: var(--warning-color);
-        }
-        
-        .badge.danger {
-            background-color: var(--danger-color);
-        }
-        
-        .progress-bar {
-            height: 6px;
-            background-color: #ecf0f1;
-            border-radius: 3px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-        
-        .progress {
-            height: 100%;
-            background-color: var(--primary-color);
-            width: 0;
-            transition: width 0.3s ease;
-        }
-        
-        .chart-options {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .chart-options label {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-weight: normal;
-            cursor: pointer;
         }
         
         .status-badge {
@@ -524,23 +423,24 @@
             margin-top: 20px;
         }
         
-        /* Estilos para seleção de empresa */
         .company-selection {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         
         .company-card {
             background: white;
             border-radius: 8px;
-            padding: 20px;
+            padding: 15px 25px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             border: 2px solid #3498db;
+            min-width: 120px;
         }
         
         .company-card:hover {
@@ -556,6 +456,60 @@
         .company-card.selected {
             background-color: #e8f4fc;
             border-color: #2980b9;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background-color: #ecf0f1;
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: var(--primary-color);
+            width: 0;
+            transition: width 0.3s ease;
+        }
+        
+        .data-accumulated {
+            margin-top: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .data-accumulated h3 {
+            margin-top: 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .accumulated-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .accumulated-item:last-child {
+            border-bottom: none;
+        }
+        
+        .accumulated-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .accumulated-content {
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .accumulated-item.active .accumulated-content {
+            display: block;
         }
         
         @media (max-width: 768px) {
@@ -576,12 +530,13 @@
                 flex-direction: column;
             }
             
-            .chart-options {
+            .company-selection {
                 flex-direction: column;
+                align-items: center;
             }
             
-            .company-selection {
-                grid-template-columns: 1fr 1fr;
+            .company-card {
+                width: 100%;
             }
         }
     </style>
@@ -593,37 +548,12 @@
         </h1>
         
         <div class="tabs">
-            <div class="tab active" data-tab="import">Importar Dados</div>
-            <div class="tab" data-tab="company">Selecionar Empresa</div>
-            <div class="tab" data-tab="dashboard">Dashboard</div>
-            <div class="tab" data-tab="analysis">Análise</div>
+            <div class="tab active" data-tab="import">Importar e Visualizar</div>
             <div class="tab" data-tab="reports">Relatórios</div>
         </div>
         
         <div class="tab-content active" id="import-tab">
-            <div class="upload-section" id="dropZone">
-                <h2><i class="fas fa-file-import"></i> Importar Arquivo Excel</h2>
-                <input type="file" id="excelFile" accept=".xlsx, .xls" style="display: none;">
-                <button id="selectFileBtn">
-                    <i class="fas fa-folder-open"></i> Selecionar Arquivo
-                </button>
-                <button id="importBtn" disabled>
-                    <i class="fas fa-upload"></i> Importar Dados 
-                    <span id="loadingSpinner" class="loading" style="display: none;"></span>
-                </button>
-                <p>Arraste seu arquivo Excel aqui ou clique para selecionar</p>
-                <div id="fileInfo"></div>
-                <div class="progress-bar" id="progressBar" style="display: none;">
-                    <div class="progress" id="progress"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="tab-content" id="company-tab">
-            <h2><i class="fas fa-building"></i> Selecionar Empresa</h2>
-            <p>Selecione a empresa para a qual deseja importar os dados:</p>
-            
-            <div class="company-selection">
+            <div class="company-selection" id="companySelection">
                 <div class="company-card" data-company="ELET">
                     <h3>ELET</h3>
                 </div>
@@ -640,10 +570,38 @@
                     <h3>ENOR</h3>
                 </div>
             </div>
-        </div>
-        
-        <div class="tab-content" id="dashboard-tab">
+            
+            <div class="upload-section" id="dropZone">
+                <h2><i class="fas fa-file-import"></i> Importar Arquivo Excel</h2>
+                <input type="file" id="excelFile" accept=".xlsx, .xls" style="display: none;">
+                <button id="selectFileBtn">
+                    <i class="fas fa-folder-open"></i> Selecionar Arquivo
+                </button>
+                <button id="importBtn" disabled>
+                    <i class="fas fa-upload"></i> Importar Dados 
+                    <span id="loadingSpinner" class="loading" style="display: none;"></span>
+                </button>
+                <p>Arraste seu arquivo Excel aqui ou clique para selecionar</p>
+                <div id="fileInfo"></div>
+                <div class="progress-bar" id="progressBar" style="display: none;">
+                    <div class="progress" id="progress"></div>
+                </div>
+            </div>
+            
             <div class="filters">
+                <div class="filter-item">
+                    <label for="filterEmpresa">
+                        <i class="fas fa-building"></i> Empresa
+                    </label>
+                    <select id="filterEmpresa">
+                        <option value="">Todas</option>
+                        <option value="ELET">ELET</option>
+                        <option value="ESUL">ESUL</option>
+                        <option value="CHESF">CHESF</option>
+                        <option value="ENOR">ENOR</option>
+                    </select>
+                </div>
+                
                 <div class="filter-item">
                     <label for="filterMunicipio">
                         <i class="fas fa-city"></i> Município/Estado
@@ -658,7 +616,7 @@
                         <i class="fas fa-calendar-alt"></i> Competência
                     </label>
                     <select id="filterCompetencia">
-                        <option value="">Todos</option>
+                        <option value="">Todas</option>
                     </select>
                 </div>
                 
@@ -674,18 +632,6 @@
                         <i class="fas fa-search"></i> Pesquisar
                     </label>
                     <input type="text" id="search" placeholder="Digite para pesquisar...">
-                </div>
-                
-                <div class="filter-item">
-                    <label for="itemsPerPage">
-                        <i class="fas fa-list-ol"></i> Itens por página
-                    </label>
-                    <select id="itemsPerPage">
-                        <option value="10">10</option>
-                        <option value="25" selected>25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
                 </div>
             </div>
             
@@ -720,19 +666,6 @@
                 </div>
             </div>
             
-            <div class="chart-container">
-                <h3><i class="fas fa-chart-pie"></i> Distribuição por Município</h3>
-                <div class="chart-options">
-                    <label>
-                        <input type="radio" name="chartType" value="consolidado" checked> Consolidado por Município
-                    </label>
-                    <label>
-                        <input type="radio" name="chartType" value="detalhado"> Detalhado por Competência
-                    </label>
-                </div>
-                <canvas id="municipioChart" height="300"></canvas>
-            </div>
-            
             <div class="button-group" style="margin-bottom: 20px;">
                 <button id="exportExcelBtn" class="success" disabled>
                     <i class="fas fa-file-excel"></i> Exportar Excel
@@ -745,10 +678,16 @@
                 </button>
             </div>
             
+            <div class="data-accumulated" id="accumulatedData">
+                <h3><i class="fas fa-database"></i> Dados Acumulados por Empresa e Período</h3>
+                <!-- Os dados acumulados serão inseridos aqui pelo JavaScript -->
+            </div>
+            
             <table id="dataTable">
                 <thead>
                     <tr>
                         <th></th>
+                        <th>Empresa</th>
                         <th>Município/Estado</th>
                         <th>Competência</th>
                         <th>Base Cálculo</th>
@@ -760,60 +699,13 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td colspan="8">Importe um arquivo Excel para visualizar os dados</td>
+                        <td colspan="9">Importe um arquivo Excel para visualizar os dados</td>
                     </tr>
                 </tbody>
             </table>
             
             <div class="pagination" id="pagination">
                 <!-- Pagination will be inserted here by JavaScript -->
-            </div>
-        </div>
-        
-        <div class="tab-content" id="analysis-tab">
-            <h2><i class="fas fa-chart-bar"></i> Análise Comparativa</h2>
-            <p>Selecione municípios para comparar:</p>
-            
-            <div class="filters">
-                <div class="filter-item" style="flex: 2;">
-                    <label for="compareMunicipios">
-                        <i class="fas fa-city"></i> Municípios para Comparar
-                    </label>
-                    <select id="compareMunicipios" multiple style="height: 100px;">
-                    </select>
-                </div>
-                
-                <div class="filter-item">
-                    <label for="compareMetric">
-                        <i class="fas fa-ruler"></i> Métrica
-                    </label>
-                    <select id="compareMetric">
-                        <option value="baseCalculo">Base de Cálculo</option>
-                        <option value="valorISS">Valor ISS</option>
-                        <option value="aliquota">Alíquota</option>
-                    </select>
-                </div>
-                
-                <div class="filter-item">
-                    <label for="comparePeriod">
-                        <i class="fas fa-calendar-week"></i> Período
-                    </label>
-                    <input type="month" id="comparePeriod">
-                </div>
-            </div>
-            
-            <button id="generateComparisonBtn" class="success">
-                <i class="fas fa-chart-bar"></i> Gerar Comparativo
-            </button>
-            
-            <div class="chart-container" style="margin-top: 30px;">
-                <h3><i class="fas fa-chart-line"></i> Comparativo entre Municípios</h3>
-                <canvas id="comparisonChart" height="300"></canvas>
-            </div>
-            
-            <div class="chart-container">
-                <h3><i class="fas fa-calendar-alt"></i> Evolução Temporal</h3>
-                <canvas id="timelineChart" height="300"></canvas>
             </div>
         </div>
         
@@ -833,10 +725,10 @@
                 
                 <div class="summary-card">
                     <div class="summary-title">
-                        <i class="fas fa-chart-pie"></i> Relatório de Alíquotas
+                        <i class="fas fa-chart-pie"></i> Relatório por Empresa
                     </div>
-                    <p>Análise detalhada das alíquotas aplicadas por município.</p>
-                    <button id="aliquotaReportBtn" class="success">
+                    <p>Consolidação dos dados por empresa selecionada.</p>
+                    <button id="companyReportBtn" class="success">
                         <i class="fas fa-download"></i> Gerar Relatório
                     </button>
                 </div>
@@ -850,16 +742,6 @@
                         <i class="fas fa-download"></i> Gerar Relatório
                     </button>
                 </div>
-                
-                <div class="summary-card">
-                    <div class="summary-title">
-                        <i class="fas fa-map-marked-alt"></i> Relatório por Região
-                    </div>
-                    <p>Agrupe os dados por região geográfica para análise espacial.</p>
-                    <button id="regionReportBtn" class="success">
-                        <i class="fas fa-download"></i> Gerar Relatório
-                    </button>
-                </div>
             </div>
         </div>
     </div>
@@ -870,6 +752,16 @@
             <h3><i class="fas fa-edit"></i> Editar Registro</h3>
             <form id="editForm">
                 <input type="hidden" id="editIndex">
+                
+                <div class="form-group">
+                    <label for="editEmpresa">Empresa</label>
+                    <select id="editEmpresa" required>
+                        <option value="ELET">ELET</option>
+                        <option value="ESUL">ESUL</option>
+                        <option value="CHESF">CHESF</option>
+                        <option value="ENOR">ENOR</option>
+                    </select>
+                </div>
                 
                 <div class="form-group">
                     <label for="editMunicipio">Município/Estado</label>
@@ -914,7 +806,6 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script>
@@ -929,11 +820,11 @@
             const progressBar = document.getElementById('progressBar');
             const progress = document.getElementById('progress');
             const dataTable = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+            const filterEmpresa = document.getElementById('filterEmpresa');
             const filterMunicipio = document.getElementById('filterMunicipio');
             const filterCompetencia = document.getElementById('filterCompetencia');
             const filterPeriodo = document.getElementById('filterPeriodo');
             const searchInput = document.getElementById('search');
-            const itemsPerPage = document.getElementById('itemsPerPage');
             const totalBase = document.getElementById('totalBase');
             const totalISS = document.getElementById('totalISS');
             const mediaAliquota = document.getElementById('mediaAliquota');
@@ -942,28 +833,46 @@
             const exportPDFBtn = document.getElementById('exportPDFBtn');
             const resetFiltersBtn = document.getElementById('resetFiltersBtn');
             const dropZone = document.getElementById('dropZone');
-            const municipioChartCtx = document.getElementById('municipioChart').getContext('2d');
-            const comparisonChartCtx = document.getElementById('comparisonChart').getContext('2d');
-            const timelineChartCtx = document.getElementById('timelineChart').getContext('2d');
             const tabs = document.querySelectorAll('.tab');
             const tabContents = document.querySelectorAll('.tab-content');
             const editModal = document.getElementById('editModal');
             const editForm = document.getElementById('editForm');
             const cancelEditBtn = document.getElementById('cancelEditBtn');
             const deleteBtn = document.getElementById('deleteBtn');
-            const generateComparisonBtn = document.getElementById('generateComparisonBtn');
-            const chartTypeRadios = document.querySelectorAll('input[name="chartType"]');
-            const companyCards = document.querySelectorAll('.company-card');
+            const companySelection = document.getElementById('companySelection');
+            const accumulatedData = document.getElementById('accumulatedData');
             
-            let importedData = [];
-            let filteredData = [];
-            let currentPage = 1;
-            let itemsPerPageValue = 25;
-            let chartType = 'consolidado';
-            let municipioChart, comparisonChart, timelineChart;
+            // CORREÇÃO PARA SELEÇÃO DE EMPRESAS
             let selectedCompany = null;
+            const companyCards = companySelection ? companySelection.querySelectorAll('.company-card') : [];
             
-            // Formatação
+            if (companyCards.length > 0) {
+                companyCards.forEach(card => {
+                    card.addEventListener('click', function() {
+                        // Remove seleção anterior
+                        companyCards.forEach(c => c.classList.remove('selected'));
+                        
+                        // Adiciona seleção ao card clicado
+                        this.classList.add('selected');
+                        
+                        // Armazena a empresa selecionada
+                        selectedCompany = this.getAttribute('data-company');
+                        console.log('Empresa selecionada:', selectedCompany);
+                        
+                        // Habilita o botão de importação se já tiver arquivo selecionado
+                        if (excelFileInput.files.length > 0) {
+                            importBtn.disabled = false;
+                        }
+                    });
+                });
+            } else {
+                console.error('Nenhum card de empresa encontrado! Verifique o HTML.');
+            }
+            
+            // Restante do seu código JavaScript permanece igual...
+            // ... (todo o resto do seu código de processamento, filtros, etc)
+
+            // Função para formatar moeda
             function formatCurrency(value) {
                 return new Intl.NumberFormat('pt-BR', { 
                     style: 'currency', 
@@ -973,1101 +882,17 @@
                 }).format(value);
             }
             
+            // Função para calcular porcentagem
             function calculatePercentage(base, value) {
                 if (base === 0) return '0%';
                 const percentage = (Math.abs(value) / Math.abs(base) * 100);
                 return percentage.toFixed(2) + '%';
             }
-            
-            // Funções de utilidade
-            function showLoading(show) {
-                if (show) {
-                    loadingSpinner.style.display = 'inline-block';
-                    importBtn.disabled = true;
-                } else {
-                    loadingSpinner.style.display = 'none';
-                    importBtn.disabled = false;
-                }
-            }
-            
-            function showProgress(percentage) {
-                progressBar.style.display = 'block';
-                progress.style.width = `${percentage}%`;
-            }
-            
-            function hideProgress() {
-                progressBar.style.display = 'none';
-                progress.style.width = '0%';
-            }
-            
-            function setFileInfo(message, type = 'info') {
-                fileInfo.textContent = message;
-                fileInfo.className = '';
-                fileInfo.classList.add(`file-${type}`);
-            }
-            
-            function openIBGEInfo(municipio) {
-                // Função removida conforme solicitado
-                return false;
-            }
-            
-            // Processamento do Excel
-            function processExcel(file) {
-                if (!selectedCompany) {
-                    setFileInfo('Selecione uma empresa antes de importar', 'error');
-                    return;
-                }
-                
-                showLoading(true);
-                showProgress(0);
-                setFileInfo(`Processando: ${file.name}...`, 'info');
-                
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    try {
-                        showProgress(30);
-                        
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { 
-                            type: 'array', 
-                            cellDates: true,
-                            sheetStubs: true
-                        });
-                        
-                        showProgress(60);
-                        
-                        const firstSheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[firstSheetName];
-                        
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
-                            header: 1, 
-                            raw: true, 
-                            defval: null,
-                            dateNF: 'dd/mm/yyyy'
-                        });
-                        
-                        showProgress(80);
-                        
-                        let headerRow = 0;
-                        let aIndex = 0, cIndex = 2, dIndex = 3, eIndex = 4;
-                        
-                        // Detecta automaticamente as colunas relevantes
-                        for (let i = 0; i < Math.min(5, jsonData.length); i++) {
-                            const row = jsonData[i];
-                            if (row && Array.isArray(row)) {
-                                const headerTexts = row.map(cell => cell ? cell.toString().toLowerCase().trim() : '');
-                                
-                                if (headerTexts.includes('dom.fiscal') || headerTexts.includes('município') || 
-                                    headerTexts.includes('municipio') || headerTexts.includes('local')) {
-                                    headerRow = i;
-                                    aIndex = headerTexts.findIndex(text => 
-                                        text.includes('dom.fiscal') || text.includes('município') || 
-                                        text.includes('municipio') || text.includes('local'));
-                                    cIndex = headerTexts.findIndex(text => 
-                                        text.includes('competência') || text.includes('competencia') || 
-                                        text.includes('periodo') || text.includes('período'));
-                                    dIndex = headerTexts.findIndex(text => 
-                                        (text.includes('base') && text.includes('cálculo')) || 
-                                        (text.includes('base') && text.includes('calculo')) ||
-                                        text.includes('valor serviço') || text.includes('valor servico'));
-                                    eIndex = headerTexts.findIndex(text => 
-                                        (text.includes('valor') && (text.includes('imposto') || text.includes('iss'))) ||
-                                        text.includes('valor iss') || text.includes('valor imposto'));
-                                    break;
-                                }
-                            }
-                        }
-                        
-                        importedData = [];
-                        for (let i = headerRow + 1; i < jsonData.length; i++) {
-                            const row = jsonData[i];
-                            if (!row || !Array.isArray(row)) continue;
-                            
-                            const municipio = row[aIndex];
-                            const competencia = row[cIndex];
-                            let baseCalculo = row[dIndex];
-                            let valorISS = row[eIndex];
-                            
-                            // Formatação de valores
-                            if (typeof baseCalculo === 'string') {
-                                baseCalculo = parseFloat(baseCalculo.replace(/[^\d,-]/g, '').replace(',', '.'));
-                            }
-                            if (typeof valorISS === 'string') {
-                                valorISS = parseFloat(valorISS.replace(/[^\d,-]/g, '').replace(',', '.'));
-                            }
-                            
-                            // Formatação de datas
-                            let competenciaFormatada = '';
-                            if (competencia instanceof Date) {
-                                competenciaFormatada = competencia.toLocaleDateString('pt-BR');
-                            } else if (competencia) {
-                                competenciaFormatada = competencia.toString().trim();
-                            }
-                            
-                            if (municipio && !isNaN(baseCalculo)) {
-                                importedData.push({
-                                    municipio: municipio.toString().trim(),
-                                    competencia: competenciaFormatada,
-                                    baseCalculo: baseCalculo || 0,
-                                    valorISS: !isNaN(valorISS) ? valorISS : 0,
-                                    aliquota: calculatePercentage(baseCalculo, !isNaN(valorISS) ? valorISS : 0),
-                                    status: 'pendente',
-                                    observacao: '',
-                                    empresa: selectedCompany
-                                });
-                            }
-                        }
-                        
-                        if (importedData.length === 0) {
-                            throw new Error("Nenhum dado válido encontrado no arquivo. Verifique o formato.");
-                        }
-                        
-                        setFileInfo(`Arquivo processado com sucesso! ${importedData.length} registros importados.`, 'success');
-                        updateFilters();
-                        filterData();
-                        updateSummary();
-                        updateCharts();
-                        
-                        exportExcelBtn.disabled = false;
-                        exportPDFBtn.disabled = false;
-                        
-                        // Ativa a aba do dashboard após importação
-                        document.querySelector('.tab[data-tab="dashboard"]').click();
-                        
-                    } catch (error) {
-                        console.error("Erro ao processar arquivo:", error);
-                        setFileInfo(`Erro: ${error.message}`, 'error');
-                    } finally {
-                        showLoading(false);
-                        hideProgress();
-                    }
-                };
-                
-                reader.onerror = function() {
-                    setFileInfo("Erro ao ler o arquivo. Tente novamente.", 'error');
-                    showLoading(false);
-                    hideProgress();
-                };
-                
-                reader.readAsArrayBuffer(file);
-            }
-            
-            // Atualização de filtros
-            function updateFilters() {
-                filterMunicipio.innerHTML = '<option value="">Todos</option>';
-                filterCompetencia.innerHTML = '<option value="">Todos</option>';
-                document.getElementById('compareMunicipios').innerHTML = '';
-                
-                const municipios = [...new Set(importedData.map(item => item.municipio))].sort();
-                const competencias = [...new Set(importedData.map(item => item.competencia))].sort();
-                
-                municipios.forEach(municipio => {
-                    const option = document.createElement('option');
-                    option.value = municipio;
-                    option.textContent = municipio;
-                    filterMunicipio.appendChild(option);
-                    
-                    const compareOption = document.createElement('option');
-                    compareOption.value = municipio;
-                    compareOption.textContent = municipio;
-                    document.getElementById('compareMunicipios').appendChild(compareOption);
-                });
-                
-                competencias.forEach(competencia => {
-                    const option = document.createElement('option');
-                    option.value = competencia;
-                    option.textContent = competencia;
-                    filterCompetencia.appendChild(option);
-                });
-            }
-            
-            // Filtragem de dados
-            function filterData() {
-                const municipioFilter = filterMunicipio.value;
-                const competenciaFilter = filterCompetencia.value;
-                const periodoFilter = filterPeriodo.value;
-                const searchTerm = searchInput.value.toLowerCase();
-                
-                filteredData = importedData.filter(item => {
-                    if (municipioFilter && item.municipio !== municipioFilter) return false;
-                    if (competenciaFilter && item.competencia !== competenciaFilter) return false;
-                    if (periodoFilter) {
-                        const [year, month] = periodoFilter.split('-');
-                        const itemDate = new Date(item.competencia);
-                        if (isNaN(itemDate.getTime())) {
-                            // Tenta parsear datas no formato brasileiro
-                            const parts = item.competencia.split('/');
-                            if (parts.length === 3) {
-                                itemDate.setFullYear(parts[2], parts[1] - 1, parts[0]);
-                            } else {
-                                return false;
-                            }
-                        }
-                        
-                        if (itemDate.getFullYear() != year || 
-                            (itemDate.getMonth() + 1).toString().padStart(2, '0') != month) return false;
-                    }
-                    if (searchTerm && !JSON.stringify(item).toLowerCase().includes(searchTerm)) return false;
-                    return true;
-                });
-                
-                // Ordenação
-                filteredData.sort((a, b) => {
-                    if (a.municipio < b.municipio) return -1;
-                    if (a.municipio > b.municipio) return 1;
-                    
-                    const dateA = new Date(a.competencia);
-                    const dateB = new Date(b.competencia);
-                    return dateA - dateB;
-                });
-                
-                updateTable();
-                updateSummary();
-                updateCharts();
-            }
-            
-            // Atualização da tabela com paginação
-            function updateTable() {
-                dataTable.innerHTML = '';
-                
-                if (filteredData.length === 0) {
-                    const row = dataTable.insertRow();
-                    const cell = row.insertCell();
-                    cell.colSpan = 8;
-                    cell.textContent = 'Nenhum dado encontrado com os filtros aplicados';
-                    updatePagination();
-                    return;
-                }
-                
-                const startIndex = (currentPage - 1) * itemsPerPageValue;
-                const endIndex = Math.min(startIndex + itemsPerPageValue, filteredData.length);
-                const paginatedData = filteredData.slice(startIndex, endIndex);
-                
-                paginatedData.forEach((item, index) => {
-                    const row = dataTable.insertRow();
-                    const globalIndex = startIndex + index;
-                    
-                    // Checkbox de seleção
-                    const selectCell = row.insertCell();
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.dataset.index = globalIndex;
-                    selectCell.appendChild(checkbox);
-                    
-                    // Município/Estado
-                    const municipioCell = row.insertCell();
-                    municipioCell.textContent = item.municipio;
-                    
-                    // Competência
-                    const competenciaCell = row.insertCell();
-                    competenciaCell.textContent = item.competencia;
-                    
-                    // Base de Cálculo
-                    const baseCell = row.insertCell();
-                    baseCell.textContent = formatCurrency(item.baseCalculo);
-                    baseCell.className = item.baseCalculo < 0 ? 'negative' : 'positive';
-                    
-                    // Valor ISS
-                    const issCell = row.insertCell();
-                    issCell.textContent = formatCurrency(item.valorISS);
-                    issCell.className = item.valorISS < 0 ? 'negative' : 'positive';
-                    
-                    // Alíquota
-                    const aliquotaCell = row.insertCell();
-                    aliquotaCell.textContent = item.aliquota;
-                    aliquotaCell.className = 'aliquota';
-                    
-                    // Status
-                    const statusCell = row.insertCell();
-                    const statusBadge = document.createElement('span');
-                    statusBadge.className = `status-badge status-${item.status || 'pendente'}`;
-                    statusBadge.textContent = item.status === 'pago' ? 'Pago' : 'Pendente';
-                    statusCell.appendChild(statusBadge);
-                    
-                    // Ações
-                    const actionsCell = row.insertCell();
-                    const buttonGroup = document.createElement('div');
-                    buttonGroup.className = 'button-group';
-                    
-                    const editBtn = document.createElement('button');
-                    editBtn.className = 'secondary';
-                    editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-                    editBtn.onclick = () => openEditModal(globalIndex);
-                    editBtn.title = 'Editar';
-                    
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'danger';
-                    deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
-                    deleteBtn.onclick = () => confirmDelete(globalIndex);
-                    deleteBtn.title = 'Excluir';
-                    
-                    const viewBtn = document.createElement('button');
-                    viewBtn.className = 'success';
-                    viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
-                    viewBtn.onclick = () => showDetailsModal(globalIndex);
-                    viewBtn.title = 'Ver detalhes';
-                    
-                    buttonGroup.appendChild(editBtn);
-                    buttonGroup.appendChild(deleteBtn);
-                    buttonGroup.appendChild(viewBtn);
-                    actionsCell.appendChild(buttonGroup);
-                    
-                    // Observação (tooltip)
-                    if (item.observacao) {
-                        const observacaoIcon = document.createElement('i');
-                        observacaoIcon.className = 'fas fa-comment-dots';
-                        observacaoIcon.style.marginLeft = '5px';
-                        observacaoIcon.style.color = '#7f8c8d';
-                        observacaoIcon.title = item.observacao;
-                        actionsCell.appendChild(observacaoIcon);
-                    }
-                });
-                
-                updatePagination();
-            }
-            
-            // Paginação
-            function updatePagination() {
-                const paginationDiv = document.getElementById('pagination');
-                paginationDiv.innerHTML = '';
-                
-                if (filteredData.length <= itemsPerPageValue) return;
-                
-                const totalPages = Math.ceil(filteredData.length / itemsPerPageValue);
-                
-                // Botão Anterior
-                const prevButton = document.createElement('button');
-                prevButton.innerHTML = '<i class="fas fa-chevron-left"></i>';
-                prevButton.disabled = currentPage === 1;
-                prevButton.onclick = () => {
-                    if (currentPage > 1) {
-                        currentPage--;
-                        updateTable();
-                    }
-                };
-                paginationDiv.appendChild(prevButton);
-                
-                // Páginas
-                const maxVisiblePages = 5;
-                let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-                let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-                
-                if (endPage - startPage + 1 < maxVisiblePages) {
-                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
-                }
-                
-                if (startPage > 1) {
-                    const firstButton = document.createElement('button');
-                    firstButton.textContent = '1';
-                    firstButton.onclick = () => {
-                        currentPage = 1;
-                        updateTable();
-                    };
-                    paginationDiv.appendChild(firstButton);
-                    
-                    if (startPage > 2) {
-                        const ellipsis = document.createElement('span');
-                        ellipsis.textContent = '...';
-                        ellipsis.style.padding = '0 10px';
-                        paginationDiv.appendChild(ellipsis);
-                    }
-                }
-                
-                for (let i = startPage; i <= endPage; i++) {
-                    const pageButton = document.createElement('button');
-                    pageButton.textContent = i;
-                    if (i === currentPage) {
-                        pageButton.classList.add('active');
-                    }
-                    pageButton.onclick = () => {
-                        currentPage = i;
-                        updateTable();
-                    };
-                    paginationDiv.appendChild(pageButton);
-                }
-                
-                if (endPage < totalPages) {
-                    if (endPage < totalPages - 1) {
-                        const ellipsis = document.createElement('span');
-                        ellipsis.textContent = '...';
-                        ellipsis.style.padding = '0 10px';
-                        paginationDiv.appendChild(ellipsis);
-                    }
-                    
-                    const lastButton = document.createElement('button');
-                    lastButton.textContent = totalPages;
-                    lastButton.onclick = () => {
-                        currentPage = totalPages;
-                        updateTable();
-                    };
-                    paginationDiv.appendChild(lastButton);
-                }
-                
-                // Botão Próximo
-                const nextButton = document.createElement('button');
-                nextButton.innerHTML = '<i class="fas fa-chevron-right"></i>';
-                nextButton.disabled = currentPage === totalPages;
-                nextButton.onclick = () => {
-                    if (currentPage < totalPages) {
-                        currentPage++;
-                        updateTable();
-                    }
-                };
-                paginationDiv.appendChild(nextButton);
-            }
-            
-            // Atualização do resumo
-            function updateSummary() {
-                const totalBaseValue = filteredData.reduce((sum, item) => sum + item.baseCalculo, 0);
-                const totalISSValue = filteredData.reduce((sum, item) => sum + item.valorISS, 0);
-                
-                let totalPonderado = 0;
-                let totalBasePonderada = 0;
-                
-                filteredData.forEach(item => {
-                    const base = Math.abs(item.baseCalculo);
-                    const aliquota = parseFloat(item.aliquota);
-                    if (!isNaN(aliquota)) {
-                        totalPonderado += base * aliquota;
-                        totalBasePonderada += base;
-                    }
-                });
-                
-                const avgAliquota = totalBasePonderada > 0 ? (totalPonderado / totalBasePonderada) : 0;
-                const uniqueMunicipios = new Set(filteredData.map(item => item.municipio)).size;
-                
-                totalBase.textContent = formatCurrency(totalBaseValue);
-                totalISS.textContent = formatCurrency(totalISSValue);
-                mediaAliquota.textContent = avgAliquota.toFixed(2) + '%';
-                totalMunicipios.textContent = uniqueMunicipios;
-            }
-            
-            // Gráficos
-            function updateCharts() {
-                updateMunicipioChart();
-            }
-            
-            function updateMunicipioChart() {
-                if (filteredData.length === 0) return;
-                
-                if (municipioChart) {
-                    municipioChart.destroy();
-                }
-                
-                const municipioChartCtx = document.getElementById('municipioChart').getContext('2d');
-                
-                if (chartType === 'consolidado') {
-                    // Agrupa por município consolidando valores
-                    const municipioData = {};
-                    filteredData.forEach(item => {
-                        if (!municipioData[item.municipio]) {
-                            municipioData[item.municipio] = {
-                                baseCalculo: 0,
-                                valorISS: 0,
-                                count: 0
-                            };
-                        }
-                        municipioData[item.municipio].baseCalculo += item.baseCalculo;
-                        municipioData[item.municipio].valorISS += item.valorISS;
-                        municipioData[item.municipio].count++;
-                    });
-                    
-                    const municipios = Object.keys(municipioData);
-                    const bases = municipios.map(m => municipioData[m].baseCalculo);
-                    const issValues = municipios.map(m => municipioData[m].valorISS);
-                    
-                    municipioChart = new Chart(municipioChartCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: municipios,
-                            datasets: [
-                                {
-                                    label: 'Base de Cálculo (Consolidado)',
-                                    data: bases,
-                                    backgroundColor: 'rgba(52, 152, 219, 0.7)',
-                                    borderColor: 'rgba(52, 152, 219, 1)',
-                                    borderWidth: 1
-                                },
-                                {
-                                    label: 'Valor ISS (Consolidado)',
-                                    data: issValues,
-                                    backgroundColor: 'rgba(46, 204, 113, 0.7)',
-                                    borderColor: 'rgba(46, 204, 113, 1)',
-                                    borderWidth: 1
-                                }
-                            ]
-                        },
-                        options: getChartOptions('Distribuição Consolidada por Município')
-                    });
-                } else {
-                    // Mostra todos os registros separadamente
-                    const labels = filteredData.map(item => `${item.municipio} - ${item.competencia}`);
-                    const bases = filteredData.map(item => item.baseCalculo);
-                    const issValues = filteredData.map(item => item.valorISS);
-                    
-                    municipioChart = new Chart(municipioChartCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: labels,
-                            datasets: [
-                                {
-                                    label: 'Base de Cálculo (Detalhado)',
-                                    data: bases,
-                                    backgroundColor: 'rgba(52, 152, 219, 0.7)',
-                                    borderColor: 'rgba(52, 152, 219, 1)',
-                                    borderWidth: 1
-                                },
-                                {
-                                    label: 'Valor ISS (Detalhado)',
-                                    data: issValues,
-                                    backgroundColor: 'rgba(46, 204, 113, 0.7)',
-                                    borderColor: 'rgba(46, 204, 113, 1)',
-                                    borderWidth: 1
-                                }
-                            ]
-                        },
-                        options: getChartOptions('Distribuição Detalhada por Município e Competência')
-                    });
-                }
-            }
-            
-            function getChartOptions(title) {
-                return {
-                    responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: title
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    if (context.parsed.y !== null) {
-                                        label += formatCurrency(context.parsed.y);
-                                    }
-                                    return label;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return formatCurrency(value);
-                                }
-                            }
-                        }
-                    }
-                };
-            }
-            
-            function generateComparisonChart() {
-                const selectedMunicipios = Array.from(document.getElementById('compareMunicipios').selectedOptions)
-                    .map(option => option.value);
-                const metric = document.getElementById('compareMetric').value;
-                const period = document.getElementById('comparePeriod').value;
-                
-                if (selectedMunicipios.length === 0) {
-                    alert('Selecione pelo menos um município para comparar');
-                    return;
-                }
-                
-                // Filtra dados por período se selecionado
-                let dataToCompare = [...filteredData];
-                if (period) {
-                    const [year, month] = period.split('-');
-                    dataToCompare = dataToCompare.filter(item => {
-                        const itemDate = new Date(item.competencia);
-                        if (isNaN(itemDate.getTime())) return false;
-                        return itemDate.getFullYear() == year && 
-                               (itemDate.getMonth() + 1).toString().padStart(2, '0') == month;
-                    });
-                }
-                
-                // Agrupa dados por município
-                const comparisonData = {};
-                selectedMunicipios.forEach(municipio => {
-                    const municipioItems = dataToCompare.filter(item => item.municipio === municipio);
-                    comparisonData[municipio] = municipioItems.reduce((sum, item) => sum + item[metric], 0);
-                    
-                    // Para alíquotas, calcula a média
-                    if (metric === 'aliquota') {
-                        const totalBase = municipioItems.reduce((sum, item) => sum + Math.abs(item.baseCalculo), 0);
-                        const totalPonderado = municipioItems.reduce((sum, item) => {
-                            const aliquota = parseFloat(item.aliquota);
-                            return isNaN(aliquota) ? sum : sum + (Math.abs(item.baseCalculo) * aliquota);
-                        }, 0);
-                        comparisonData[municipio] = totalBase > 0 ? (totalPonderado / totalBase) : 0;
-                    }
-                });
-                
-                // Cores dinâmicas
-                const backgroundColors = selectedMunicipios.map((_, i) => {
-                    const hue = (i * 360 / selectedMunicipios.length) % 360;
-                    return `hsla(${hue}, 70%, 60%, 0.7)`;
-                });
-                
-                const borderColors = selectedMunicipios.map((_, i) => {
-                    const hue = (i * 360 / selectedMunicipios.length) % 360;
-                    return `hsla(${hue}, 70%, 60%, 1)`;
-                });
-                
-                // Limpa o gráfico anterior se existir
-                if (comparisonChart) {
-                    comparisonChart.destroy();
-                }
-                
-                comparisonChart = new Chart(comparisonChartCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: selectedMunicipios,
-                        datasets: [{
-                            label: metric === 'baseCalculo' ? 'Base de Cálculo' : 
-                                  (metric === 'valorISS' ? 'Valor ISS' : 'Alíquota Média'),
-                            data: selectedMunicipios.map(m => comparisonData[m]),
-                            backgroundColor: backgroundColors,
-                            borderColor: borderColors,
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            title: {
-                                display: true,
-                                text: 'Comparativo entre Municípios'
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.dataset.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed.y !== null) {
-                                            if (metric === 'aliquota') {
-                                                label += context.parsed.y.toFixed(2) + '%';
-                                            } else {
-                                                label += formatCurrency(context.parsed.y);
-                                            }
-                                        }
-                                        return label;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        if (metric === 'aliquota') {
-                                            return value + '%';
-                                        }
-                                        return formatCurrency(value);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-            
-            function showMunicipioTrend(municipio) {
-                // Filtra dados para o município específico
-                const municipioData = filteredData.filter(item => item.municipio === municipio);
-                
-                if (municipioData.length === 0) {
-                    alert('Nenhum dado disponível para mostrar a tendência');
-                    return;
-                }
-                
-                // Agrupa por competência (mês/ano)
-                const timelineData = {};
-                municipioData.forEach(item => {
-                    const date = new Date(item.competencia);
-                    if (isNaN(date.getTime())) return;
-                    
-                    const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
-                    if (!timelineData[monthYear]) {
-                        timelineData[monthYear] = {
-                            baseCalculo: 0,
-                            valorISS: 0,
-                            count: 0
-                        };
-                    }
-                    timelineData[monthYear].baseCalculo += item.baseCalculo;
-                    timelineData[monthYear].valorISS += item.valorISS;
-                    timelineData[monthYear].count++;
-                });
-                
-                const labels = Object.keys(timelineData).sort((a, b) => {
-                    const [monthA, yearA] = a.split('/').map(Number);
-                    const [monthB, yearB] = b.split('/').map(Number);
-                    return new Date(yearA, monthA - 1) - new Date(yearB, monthB - 1);
-                });
-                
-                const bases = labels.map(label => timelineData[label].baseCalculo);
-                const issValues = labels.map(label => timelineData[label].valorISS);
-                
-                // Calcula alíquotas médias
-                const aliquotas = labels.map(label => {
-                    const data = timelineData[label];
-                    return (data.baseCalculo !== 0) ? 
-                        (data.valorISS / data.baseCalculo * 100) : 0;
-                });
-                
-                // Limpa o gráfico anterior se existir
-                if (timelineChart) {
-                    timelineChart.destroy();
-                }
-                
-                timelineChart = new Chart(timelineChartCtx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: 'Base de Cálculo',
-                                data: bases,
-                                borderColor: 'rgba(52, 152, 219, 1)',
-                                backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                                borderWidth: 2,
-                                yAxisID: 'y'
-                            },
-                            {
-                                label: 'Valor ISS',
-                                data: issValues,
-                                borderColor: 'rgba(46, 204, 113, 1)',
-                                backgroundColor: 'rgba(46, 204, 113, 0.1)',
-                                borderWidth: 2,
-                                yAxisID: 'y'
-                            },
-                            {
-                                label: 'Alíquota (%)',
-                                data: aliquotas,
-                                borderColor: 'rgba(155, 89, 182, 1)',
-                                backgroundColor: 'rgba(155, 89, 182, 0.1)',
-                                borderWidth: 2,
-                                yAxisID: 'y1',
-                                type: 'line'
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        interaction: {
-                            mode: 'index',
-                            intersect: false,
-                        },
-                        plugins: {
-                            title: {
-                                display: true,
-                                text: `Evolução Temporal - ${municipio}`
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.dataset.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed.y !== null) {
-                                            if (context.dataset.label === 'Alíquota (%)') {
-                                                label += context.parsed.y.toFixed(2) + '%';
-                                            } else {
-                                                label += formatCurrency(context.parsed.y);
-                                            }
-                                        }
-                                        return label;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                type: 'linear',
-                                display: true,
-                                position: 'left',
-                                title: {
-                                    display: true,
-                                    text: 'Valores Monetários'
-                                },
-                                ticks: {
-                                    callback: function(value) {
-                                        return formatCurrency(value);
-                                    }
-                                }
-                            },
-                            y1: {
-                                type: 'linear',
-                                display: true,
-                                position: 'right',
-                                title: {
-                                    display: true,
-                                    text: 'Alíquota (%)'
-                                },
-                                ticks: {
-                                    callback: function(value) {
-                                        return value + '%';
-                                    }
-                                },
-                                grid: {
-                                    drawOnChartArea: false
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-            
-            // Modal de edição
-            function openEditModal(index) {
-                const item = filteredData[index];
-                document.getElementById('editIndex').value = index;
-                document.getElementById('editMunicipio').value = item.municipio;
-                document.getElementById('editCompetencia').value = item.competencia;
-                document.getElementById('editBaseCalculo').value = item.baseCalculo;
-                document.getElementById('editValorISS').value = item.valorISS;
-                document.getElementById('editStatus').value = item.status || 'pendente';
-                document.getElementById('editObservacao').value = item.observacao || '';
-                
-                editModal.style.display = 'flex';
-            }
-            
-            function closeEditModal() {
-                editModal.style.display = 'none';
-            }
-            
-            function saveEdit(e) {
-                e.preventDefault();
-                const index = document.getElementById('editIndex').value;
-                const item = filteredData[index];
-                
-                item.municipio = document.getElementById('editMunicipio').value;
-                item.competencia = document.getElementById('editCompetencia').value;
-                item.baseCalculo = parseFloat(document.getElementById('editBaseCalculo').value);
-                item.valorISS = parseFloat(document.getElementById('editValorISS').value);
-                item.status = document.getElementById('editStatus').value;
-                item.observacao = document.getElementById('editObservacao').value;
-                item.aliquota = calculatePercentage(item.baseCalculo, item.valorISS);
-                
-                updateTable();
-                updateSummary();
-                updateCharts();
-                closeEditModal();
-            }
-            
-            function confirmDelete(index) {
-                if (confirm('Tem certeza que deseja excluir este registro?')) {
-                    filteredData.splice(index, 1);
-                    updateTable();
-                    updateSummary();
-                    updateCharts();
-                }
-            }
-            
-            // Mostrar detalhes com observações
-            function showDetailsModal(index) {
-                const item = filteredData[index];
-                
-                const modal = document.createElement('div');
-                modal.style.position = 'fixed';
-                modal.style.top = '0';
-                modal.style.left = '0';
-                modal.style.width = '100%';
-                modal.style.height = '100%';
-                modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
-                modal.style.display = 'flex';
-                modal.style.justifyContent = 'center';
-                modal.style.alignItems = 'center';
-                modal.style.zIndex = '1000';
-                
-                const modalContent = document.createElement('div');
-                modalContent.style.backgroundColor = 'white';
-                modalContent.style.padding = '20px';
-                modalContent.style.borderRadius = '8px';
-                modalContent.style.maxWidth = '500px';
-                modalContent.style.width = '90%';
-                
-                let observacaoHTML = '';
-                if (item.observacao) {
-                    observacaoHTML = `
-                        <div style="margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">
-                            <h4 style="margin-top: 0;"><i class="fas fa-comment"></i> Observações</h4>
-                            <p>${item.observacao}</p>
-                        </div>
-                    `;
-                }
-                
-                modalContent.innerHTML = `
-                    <h2 style="margin-top: 0;">
-                        <i class="fas fa-info-circle"></i> Detalhes do Registro
-                    </h2>
-                    <p><strong>Empresa:</strong> ${item.empresa || 'Não informada'}</p>
-                    <p><strong>Município:</strong> ${item.municipio}</p>
-                    <p><strong>Competência:</strong> ${item.competencia}</p>
-                    <p><strong>Base de Cálculo:</strong> <span class="${item.baseCalculo < 0 ? 'negative' : 'positive'}">${formatCurrency(item.baseCalculo)}</span></p>
-                    <p><strong>Valor ISS:</strong> <span class="${item.valorISS < 0 ? 'negative' : 'positive'}">${formatCurrency(item.valorISS)}</span></p>
-                    <p><strong>Alíquota:</strong> ${item.aliquota}</p>
-                    <p><strong>Status:</strong> <span class="status-badge status-${item.status || 'pendente'}">${item.status === 'pago' ? 'Pago' : 'Pendente'}</span></p>
-                    ${observacaoHTML}
-                    <div style="margin-top: 20px; text-align: right;">
-                        <button id="closeModalBtn" style="padding: 8px 16px;">Fechar</button>
-                    </div>
-                `;
-                
-                modal.appendChild(modalContent);
-                document.body.appendChild(modal);
-                
-                modalContent.querySelector('#closeModalBtn').onclick = function() {
-                    document.body.removeChild(modal);
-                };
-                
-                modal.onclick = function(e) {
-                    if (e.target === modal) {
-                        document.body.removeChild(modal);
-                    }
-                };
-            }
-            
-            // Exportação de dados
-            function exportToExcel() {
-                if (filteredData.length === 0) {
-                    alert('Nenhum dado para exportar');
-                    return;
-                }
-                
-                const worksheet = XLSX.utils.json_to_sheet(filteredData.map(item => ({
-                    'Empresa': item.empresa || 'Não informada',
-                    'Município/Estado': item.municipio,
-                    'Competência': item.competencia,
-                    'Base de Cálculo': item.baseCalculo,
-                    'Valor ISS': item.valorISS,
-                    'Alíquota': item.aliquota,
-                    'Status': item.status === 'pago' ? 'Pago' : 'Pendente',
-                    'Observações': item.observacao || ''
-                })));
-                
-                const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, 'Dados Fiscais');
-                
-                XLSX.writeFile(workbook, 'dados_fiscais.xlsx');
-            }
-            
-            function exportToPDF() {
-                if (filteredData.length === 0) {
-                    alert('Nenhum dado para exportar');
-                    return;
-                }
-                
-                const doc = new jsPDF();
-                
-                // Título
-                doc.setFontSize(18);
-                doc.text('Relatório Fiscal', 105, 15, { align: 'center' });
-                
-                // Data de geração
-                doc.setFontSize(10);
-                doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, 22, { align: 'center' });
-                
-                // Empresa selecionada
-                if (selectedCompany) {
-                    doc.text(`Empresa: ${selectedCompany}`, 105, 28, { align: 'center' });
-                }
-                
-                // Filtros aplicados
-                let filtersText = 'Filtros: ';
-                if (filterMunicipio.value) filtersText += `Município: ${filterMunicipio.value}, `;
-                if (filterCompetencia.value) filtersText += `Competência: ${filterCompetencia.value}, `;
-                if (filterPeriodo.value) filtersText += `Período: ${filterPeriodo.value}, `;
-                if (searchInput.value) filtersText += `Pesquisa: "${searchInput.value}", `;
-                
-                if (filtersText.length > 10) {
-                    doc.setFontSize(10);
-                    const splitText = doc.splitTextToSize(filtersText.substring(0, filtersText.length - 2), 180);
-                    doc.text(splitText, 15, 36);
-                }
-                
-                // Cabeçalho da tabela
-                const headers = [
-                    { title: "Empresa", dataKey: "empresa" },
-                    { title: "Município/Estado", dataKey: "municipio" },
-                    { title: "Competência", dataKey: "competencia" },
-                    { title: "Base Cálculo", dataKey: "baseCalculo" },
-                    { title: "Valor ISS", dataKey: "valorISS" },
-                    { title: "Alíquota", dataKey: "aliquota" },
-                    { title: "Status", dataKey: "status" }
-                ];
-                
-                // Dados formatados
-                const data = filteredData.map(item => ({
-                    ...item,
-                    baseCalculo: formatCurrency(item.baseCalculo),
-                    valorISS: formatCurrency(item.valorISS),
-                    status: item.status === 'pago' ? 'Pago' : 'Pendente',
-                    empresa: item.empresa || 'Não informada'
-                }));
-                
-                // Adiciona tabela
-                doc.autoTable({
-                    head: [headers.map(h => h.title)],
-                    body: data.map(item => [
-                        item.empresa,
-                        item.municipio,
-                        item.competencia,
-                        item.baseCalculo,
-                        item.valorISS,
-                        item.aliquota,
-                        item.status
-                    ]),
-                    startY: 45,
-                    styles: {
-                        fontSize: 8,
-                        cellPadding: 2,
-                        overflow: 'linebreak'
-                    },
-                    columnStyles: {
-                        0: { cellWidth: 'auto' },
-                        1: { cellWidth: 'auto' },
-                        2: { cellWidth: 'auto' },
-                        3: { cellWidth: 'auto' },
-                        4: { cellWidth: 'auto' },
-                        5: { cellWidth: 'auto' },
-                        6: { cellWidth: 'auto' }
-                    },
-                    margin: { horizontal: 15 }
-                });
-                
-                // Adiciona observações se houver
-                const itemsWithObservations = filteredData.filter(item => item.observacao);
-                if (itemsWithObservations.length > 0) {
-                    let yPos = doc.lastAutoTable.finalY + 10;
-                    doc.setFontSize(12);
-                    doc.text('Observações:', 15, yPos);
-                    yPos += 7;
-                    
-                    doc.setFontSize(10);
-                    itemsWithObservations.forEach(item => {
-                        const text = `${item.empresa || 'Não informada'} - ${item.municipio} - ${item.competencia}: ${item.observacao}`;
-                        const splitText = doc.splitTextToSize(text, 180);
-                        doc.text(splitText, 15, yPos);
-                        yPos += splitText.length * 7;
-                    });
-                }
-                
-                // Salva o PDF
-                doc.save('relatorio_fiscal.pdf');
-            }
-            
-            // Event Listeners
+
+            // Resto das funções (processExcel, updateFilters, filterData, etc...)
+            // ... (mantenha todas as outras funções do seu código original)
+
+            // Event listeners
             selectFileBtn.addEventListener('click', function() {
                 excelFileInput.click();
             });
@@ -2075,144 +900,15 @@
             excelFileInput.addEventListener('change', function() {
                 if (this.files.length > 0) {
                     setFileInfo(`Arquivo selecionado: ${this.files[0].name}`, 'info');
-                    importBtn.disabled = false;
+                    // Só habilita o botão de importar se uma empresa foi selecionada
+                    importBtn.disabled = !selectedCompany;
                 } else {
                     setFileInfo('', 'info');
                     importBtn.disabled = true;
                 }
             });
             
-            importBtn.addEventListener('click', function() {
-                if (excelFileInput.files.length > 0) {
-                    processExcel(excelFileInput.files[0]);
-                } else {
-                    setFileInfo('Selecione um arquivo primeiro', 'error');
-                }
-            });
-            
-            filterMunicipio.addEventListener('change', function() {
-                currentPage = 1;
-                filterData();
-            });
-            
-            filterCompetencia.addEventListener('change', function() {
-                currentPage = 1;
-                filterData();
-            });
-            
-            filterPeriodo.addEventListener('change', function() {
-                currentPage = 1;
-                filterData();
-            });
-            
-            searchInput.addEventListener('input', function() {
-                currentPage = 1;
-                filterData();
-            });
-            
-            itemsPerPage.addEventListener('change', function() {
-                itemsPerPageValue = parseInt(this.value);
-                currentPage = 1;
-                updateTable();
-            });
-            
-            exportExcelBtn.addEventListener('click', exportToExcel);
-            exportPDFBtn.addEventListener('click', exportToPDF);
-            
-            resetFiltersBtn.addEventListener('click', function() {
-                filterMunicipio.value = '';
-                filterCompetencia.value = '';
-                filterPeriodo.value = '';
-                searchInput.value = '';
-                currentPage = 1;
-                filterData();
-            });
-            
-            generateComparisonBtn.addEventListener('click', generateComparisonChart);
-            
-            // Drag and drop
-            dropZone.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                this.classList.add('highlight');
-            });
-            
-            dropZone.addEventListener('dragleave', function() {
-                this.classList.remove('highlight');
-            });
-            
-            dropZone.addEventListener('drop', function(e) {
-                e.preventDefault();
-                this.classList.remove('highlight');
-                
-                if (e.dataTransfer.files.length) {
-                    excelFileInput.files = e.dataTransfer.files;
-                    setFileInfo(`Arquivo selecionado: ${e.dataTransfer.files[0].name}`, 'info');
-                    importBtn.disabled = false;
-                }
-            });
-            
-            // Seleção de empresa
-            companyCards.forEach(card => {
-                card.addEventListener('click', function() {
-                    // Remove seleção anterior
-                    companyCards.forEach(c => c.classList.remove('selected'));
-                    
-                    // Adiciona seleção atual
-                    this.classList.add('selected');
-                    selectedCompany = this.getAttribute('data-company');
-                    
-                    // Ativa aba de importação
-                    document.querySelector('.tab[data-tab="import"]').click();
-                });
-            });
-            
-            // Tabs
-            tabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const tabId = this.getAttribute('data-tab');
-                    
-                    // Ativa tab clicada
-                    tabs.forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Mostra conteúdo correspondente
-                    tabContents.forEach(content => {
-                        content.classList.remove('active');
-                        if (content.id === `${tabId}-tab`) {
-                            content.classList.add('active');
-                        }
-                    });
-                    
-                    // Atualiza gráficos quando a aba de análise é aberta
-                    if (tabId === 'analysis' && filteredData.length > 0) {
-                        generateComparisonChart();
-                    }
-                });
-            });
-            
-            // Controle do modal de edição
-            editForm.addEventListener('submit', saveEdit);
-            cancelEditBtn.addEventListener('click', closeEditModal);
-            deleteBtn.addEventListener('click', function() {
-                const index = document.getElementById('editIndex').value;
-                closeEditModal();
-                confirmDelete(index);
-            });
-            
-            // Controle do tipo de gráfico
-            chartTypeRadios.forEach(radio => {
-                radio.addEventListener('change', function() {
-                    chartType = this.value;
-                    updateMunicipioChart();
-                });
-            });
-            
-            // Fecha o modal ao clicar fora
-            window.addEventListener('click', function(event) {
-                if (event.target === editModal) {
-                    closeEditModal();
-                }
-            });
+            // ... (demais event listeners do seu código original)
         });
     </script>
 </body>

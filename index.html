@@ -848,41 +848,26 @@
             let importedData = [];
             let filteredData = [];
             let currentPage = 1;
-            let itemsPerPageValue = 25;
+            const itemsPerPageValue = 25;
 
-            // 1. SELEÇÃO DE EMPRESA - CORREÇÃO
+            // 1. SELEÇÃO DE EMPRESA
             const companyCards = companySelection.querySelectorAll('.company-card');
-            
             companyCards.forEach(card => {
                 card.addEventListener('click', function() {
-                    // Remove seleção anterior
                     companyCards.forEach(c => c.classList.remove('selected'));
-                    
-                    // Adiciona seleção ao card clicado
                     this.classList.add('selected');
-                    
-                    // Armazena a empresa selecionada
                     selectedCompany = this.getAttribute('data-company');
                     console.log('Empresa selecionada:', selectedCompany);
-                    
-                    // Habilita o botão de importação se já tiver arquivo selecionado
-                    if (selectedFile) {
-                        importBtn.disabled = false;
-                    }
+                    if (selectedFile) importBtn.disabled = false;
                 });
             });
 
-            // 2. SELEÇÃO DE ARQUIVO - CORREÇÃO
-            selectFileBtn.addEventListener('click', function() {
-                excelFileInput.click();
-            });
-
+            // 2. SELEÇÃO DE ARQUIVO
+            selectFileBtn.addEventListener('click', () => excelFileInput.click());
             excelFileInput.addEventListener('change', function() {
                 if (this.files.length > 0) {
                     selectedFile = this.files[0];
                     setFileInfo(`Arquivo selecionado: ${selectedFile.name}`, 'info');
-                    
-                    // Habilita o botão de importação se já tiver empresa selecionada
                     importBtn.disabled = !selectedCompany;
                 } else {
                     selectedFile = null;
@@ -891,49 +876,26 @@
                 }
             });
 
-            // 3. PROCESSAMENTO DO UPLOAD - CORREÇÃO
+            // 3. PROCESSAMENTO DO UPLOAD
             importBtn.addEventListener('click', function() {
                 if (!selectedCompany) {
                     setFileInfo('Selecione uma empresa antes de importar', 'error');
                     return;
                 }
-
                 if (!selectedFile) {
                     setFileInfo('Nenhum arquivo selecionado', 'error');
                     return;
                 }
 
-                // Mostra loading
                 showLoading(true);
                 setFileInfo(`Processando arquivo para ${selectedCompany}...`, 'info');
                 progressBar.style.display = 'block';
 
-                // Processa o arquivo
                 processExcel(selectedFile, selectedCompany);
             });
 
-            // Função para mostrar/ocultar loading
-            function showLoading(show) {
-                if (show) {
-                    loadingSpinner.style.display = 'inline-block';
-                    importBtn.disabled = true;
-                } else {
-                    loadingSpinner.style.display = 'none';
-                    importBtn.disabled = false;
-                }
-            }
-
-            // Função para mostrar informações do arquivo
-            function setFileInfo(message, type = 'info') {
-                fileInfo.textContent = message;
-                fileInfo.className = '';
-                fileInfo.classList.add(`file-${type}`);
-            }
-
-            // Função para processar o Excel
+            // 4. FUNÇÃO PRINCIPAL DE PROCESSAMENTO
             function processExcel(file, company) {
-                showProgress(10);
-                
                 const reader = new FileReader();
                 
                 reader.onload = function(e) {
@@ -941,106 +903,39 @@
                         showProgress(30);
                         
                         const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { 
-                            type: 'array', 
-                            cellDates: true,
-                            sheetStubs: true
-                        });
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheet];
                         
                         showProgress(60);
                         
-                        const firstSheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[firstSheetName];
+                        // Converter para JSON
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
                         
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
-                            header: 1, 
-                            raw: true, 
-                            defval: null,
-                            dateNF: 'dd/mm/yyyy'
+                        // Processar dados
+                        const processedData = jsonData.map(item => {
+                            // Adapte conforme a estrutura do seu Excel
+                            const baseCalculo = parseFloat(item['Base de Cálculo'] || item['Base Calculo'] || item['Base'] || 0);
+                            const valorISS = parseFloat(item['Valor ISS'] || item['ISS'] || item['Imposto'] || 0);
+                            
+                            return {
+                                empresa: company,
+                                municipio: item['Município'] || item['Municipio'] || item['Local'] || '',
+                                competencia: formatDate(item['Competência'] || item['Competencia'] || item['Período'] || ''),
+                                baseCalculo: baseCalculo,
+                                valorISS: valorISS,
+                                aliquota: calculatePercentage(baseCalculo, valorISS),
+                                status: 'pendente',
+                                observacao: '',
+                                arquivo: file.name,
+                                dataImportacao: new Date().toLocaleString('pt-BR')
+                            };
                         });
+
+                        importedData = [...importedData, ...processedData];
+                        setFileInfo(`Arquivo processado com sucesso! ${processedData.length} registros importados.`, 'success');
                         
-                        showProgress(80);
-                        
-                        let headerRow = 0;
-                        let aIndex = 0, cIndex = 2, dIndex = 3, eIndex = 4;
-                        
-                        // Detecta automaticamente as colunas relevantes
-                        for (let i = 0; i < Math.min(5, jsonData.length); i++) {
-                            const row = jsonData[i];
-                            if (row && Array.isArray(row)) {
-                                const headerTexts = row.map(cell => cell ? cell.toString().toLowerCase().trim() : '');
-                                
-                                if (headerTexts.includes('dom.fiscal') || headerTexts.includes('município') || 
-                                    headerTexts.includes('municipio') || headerTexts.includes('local')) {
-                                    headerRow = i;
-                                    aIndex = headerTexts.findIndex(text => 
-                                        text.includes('dom.fiscal') || text.includes('município') || 
-                                        text.includes('municipio') || text.includes('local'));
-                                    cIndex = headerTexts.findIndex(text => 
-                                        text.includes('competência') || text.includes('competencia') || 
-                                        text.includes('periodo') || text.includes('período'));
-                                    dIndex = headerTexts.findIndex(text => 
-                                        (text.includes('base') && text.includes('cálculo')) || 
-                                        (text.includes('base') && text.includes('calculo')) ||
-                                        text.includes('valor serviço') || text.includes('valor servico'));
-                                    eIndex = headerTexts.findIndex(text => 
-                                        (text.includes('valor') && (text.includes('imposto') || text.includes('iss'))) ||
-                                        text.includes('valor iss') || text.includes('valor imposto'));
-                                    break;
-                                }
-                            }
-                        }
-                        
-                        const newData = [];
-                        for (let i = headerRow + 1; i < jsonData.length; i++) {
-                            const row = jsonData[i];
-                            if (!row || !Array.isArray(row)) continue;
-                            
-                            const municipio = row[aIndex];
-                            const competencia = row[cIndex];
-                            let baseCalculo = row[dIndex];
-                            let valorISS = row[eIndex];
-                            
-                            // Formatação de valores
-                            if (typeof baseCalculo === 'string') {
-                                baseCalculo = parseFloat(baseCalculo.replace(/[^\d,-]/g, '').replace(',', '.'));
-                            }
-                            if (typeof valorISS === 'string') {
-                                valorISS = parseFloat(valorISS.replace(/[^\d,-]/g, '').replace(',', '.'));
-                            }
-                            
-                            // Formatação de datas
-                            let competenciaFormatada = '';
-                            if (competencia instanceof Date) {
-                                competenciaFormatada = competencia.toLocaleDateString('pt-BR');
-                            } else if (competencia) {
-                                competenciaFormatada = competencia.toString().trim();
-                            }
-                            
-                            if (municipio && !isNaN(baseCalculo)) {
-                                newData.push({
-                                    empresa: company,
-                                    municipio: municipio.toString().trim(),
-                                    competencia: competenciaFormatada,
-                                    baseCalculo: baseCalculo || 0,
-                                    valorISS: !isNaN(valorISS) ? valorISS : 0,
-                                    aliquota: calculatePercentage(baseCalculo, !isNaN(valorISS) ? valorISS : 0),
-                                    status: 'pendente',
-                                    observacao: '',
-                                    arquivo: file.name,
-                                    dataImportacao: new Date().toLocaleString('pt-BR')
-                                });
-                            }
-                        }
-                        
-                        if (newData.length === 0) {
-                            throw new Error("Nenhum dado válido encontrado no arquivo. Verifique o formato.");
-                        }
-                        
-                        // Adiciona os novos dados aos existentes
-                        importedData = [...importedData, ...newData];
-                        
-                        setFileInfo(`Arquivo processado com sucesso para ${company}! ${newData.length} registros importados.`, 'success');
+                        // Atualizar interface
                         updateFilters();
                         filterData();
                         updateSummary();
@@ -1048,7 +943,7 @@
                         
                         exportExcelBtn.disabled = false;
                         exportPDFBtn.disabled = false;
-                        
+
                     } catch (error) {
                         console.error("Erro ao processar arquivo:", error);
                         setFileInfo(`Erro: ${error.message}`, 'error');
@@ -1059,7 +954,7 @@
                 };
                 
                 reader.onerror = function() {
-                    setFileInfo("Erro ao ler o arquivo. Tente novamente.", 'error');
+                    setFileInfo("Erro ao ler o arquivo", 'error');
                     showLoading(false);
                     hideProgress();
                 };
@@ -1067,18 +962,387 @@
                 reader.readAsArrayBuffer(file);
             }
 
-            // Função para mostrar progresso
-            function showProgress(percentage) {
-                progress.style.width = `${percentage}%`;
+            // 5. FUNÇÕES DE ATUALIZAÇÃO DA INTERFACE
+            function updateFilters() {
+                // Limpar filtros
+                filterMunicipio.innerHTML = '<option value="">Todos</option>';
+                filterCompetencia.innerHTML = '<option value="">Todas</option>';
+                
+                // Adicionar opções baseadas nos dados importados
+                const municipios = [...new Set(importedData.map(item => item.municipio))].sort();
+                municipios.forEach(municipio => {
+                    const option = document.createElement('option');
+                    option.value = municipio;
+                    option.textContent = municipio;
+                    filterMunicipio.appendChild(option);
+                });
+                
+                const competencias = [...new Set(importedData.map(item => item.competencia))].sort();
+                competencias.forEach(competencia => {
+                    const option = document.createElement('option');
+                    option.value = competencia;
+                    option.textContent = competencia;
+                    filterCompetencia.appendChild(option);
+                });
             }
 
-            // Função para ocultar barra de progresso
-            function hideProgress() {
-                progressBar.style.display = 'none';
-                progress.style.width = '0%';
+            function filterData() {
+                const empresaFilter = filterEmpresa.value;
+                const municipioFilter = filterMunicipio.value;
+                const competenciaFilter = filterCompetencia.value;
+                const periodoFilter = filterPeriodo.value;
+                const searchTerm = searchInput.value.toLowerCase();
+                
+                filteredData = importedData.filter(item => {
+                    if (empresaFilter && item.empresa !== empresaFilter) return false;
+                    if (municipioFilter && item.municipio !== municipioFilter) return false;
+                    if (competenciaFilter && item.competencia !== competenciaFilter) return false;
+                    if (periodoFilter) {
+                        const [year, month] = periodoFilter.split('-');
+                        const itemDate = new Date(item.competencia);
+                        if (isNaN(itemDate.getTime())) {
+                            // Tenta parsear datas no formato brasileiro
+                            const parts = item.competencia.split('/');
+                            if (parts.length === 3) {
+                                itemDate.setFullYear(parts[2], parts[1] - 1, parts[0]);
+                            } else {
+                                return false;
+                            }
+                        }
+                        
+                        if (itemDate.getFullYear() != year || 
+                            (itemDate.getMonth() + 1).toString().padStart(2, '0') != month) return false;
+                    }
+                    if (searchTerm && !JSON.stringify(item).toLowerCase().includes(searchTerm)) return false;
+                    return true;
+                });
+                
+                // Ordenação
+                filteredData.sort((a, b) => {
+                    if (a.empresa < b.empresa) return -1;
+                    if (a.empresa > b.empresa) return 1;
+                    
+                    if (a.municipio < b.municipio) return -1;
+                    if (a.municipio > b.municipio) return 1;
+                    
+                    const dateA = new Date(a.competencia);
+                    const dateB = new Date(b.competencia);
+                    return dateA - dateB;
+                });
+                
+                currentPage = 1;
+                updateTable();
+                updateSummary();
+                updateAccumulatedData();
             }
 
-            // Função para formatar moeda
+            function updateTable() {
+                dataTable.innerHTML = '';
+                
+                if (filteredData.length === 0) {
+                    const row = dataTable.insertRow();
+                    const cell = row.insertCell();
+                    cell.colSpan = 9;
+                    cell.textContent = 'Nenhum dado encontrado com os filtros aplicados';
+                    updatePagination();
+                    return;
+                }
+                
+                const startIndex = (currentPage - 1) * itemsPerPageValue;
+                const endIndex = Math.min(startIndex + itemsPerPageValue, filteredData.length);
+                const paginatedData = filteredData.slice(startIndex, endIndex);
+                
+                paginatedData.forEach((item, index) => {
+                    const row = dataTable.insertRow();
+                    const globalIndex = startIndex + index;
+                    
+                    // Checkbox
+                    const selectCell = row.insertCell();
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.dataset.index = globalIndex;
+                    selectCell.appendChild(checkbox);
+                    
+                    // Empresa
+                    row.insertCell().textContent = item.empresa;
+                    
+                    // Município
+                    row.insertCell().textContent = item.municipio;
+                    
+                    // Competência
+                    row.insertCell().textContent = item.competencia;
+                    
+                    // Base de Cálculo
+                    const baseCell = row.insertCell();
+                    baseCell.textContent = formatCurrency(item.baseCalculo);
+                    baseCell.className = item.baseCalculo < 0 ? 'negative' : 'positive';
+                    
+                    // Valor ISS
+                    const issCell = row.insertCell();
+                    issCell.textContent = formatCurrency(item.valorISS);
+                    issCell.className = item.valorISS < 0 ? 'negative' : 'positive';
+                    
+                    // Alíquota
+                    const aliquotaCell = row.insertCell();
+                    aliquotaCell.textContent = item.aliquota;
+                    aliquotaCell.className = 'aliquota';
+                    
+                    // Status
+                    const statusCell = row.insertCell();
+                    const statusBadge = document.createElement('span');
+                    statusBadge.className = `status-badge status-${item.status}`;
+                    statusBadge.textContent = item.status === 'pago' ? 'Pago' : 'Pendente';
+                    statusCell.appendChild(statusBadge);
+                    
+                    // Ações
+                    const actionsCell = row.insertCell();
+                    const buttonGroup = document.createElement('div');
+                    buttonGroup.className = 'button-group';
+                    
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'secondary';
+                    editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+                    editBtn.onclick = () => openEditModal(globalIndex);
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'danger';
+                    deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                    deleteBtn.onclick = () => confirmDelete(globalIndex);
+                    
+                    buttonGroup.appendChild(editBtn);
+                    buttonGroup.appendChild(deleteBtn);
+                    actionsCell.appendChild(buttonGroup);
+                });
+                
+                updatePagination();
+            }
+
+            function updatePagination() {
+                const paginationDiv = document.getElementById('pagination');
+                paginationDiv.innerHTML = '';
+                
+                if (filteredData.length <= itemsPerPageValue) return;
+                
+                const totalPages = Math.ceil(filteredData.length / itemsPerPageValue);
+                
+                // Botão Anterior
+                const prevButton = document.createElement('button');
+                prevButton.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                prevButton.disabled = currentPage === 1;
+                prevButton.onclick = () => {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        updateTable();
+                    }
+                };
+                paginationDiv.appendChild(prevButton);
+                
+                // Páginas
+                const maxVisiblePages = 5;
+                let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                
+                if (endPage - startPage + 1 < maxVisiblePages) {
+                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                }
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageButton = document.createElement('button');
+                    pageButton.textContent = i;
+                    if (i === currentPage) pageButton.classList.add('active');
+                    pageButton.onclick = () => {
+                        currentPage = i;
+                        updateTable();
+                    };
+                    paginationDiv.appendChild(pageButton);
+                }
+                
+                // Botão Próximo
+                const nextButton = document.createElement('button');
+                nextButton.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                nextButton.disabled = currentPage === totalPages;
+                nextButton.onclick = () => {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        updateTable();
+                    }
+                };
+                paginationDiv.appendChild(nextButton);
+            }
+
+            function updateSummary() {
+                const totalBaseValue = filteredData.reduce((sum, item) => sum + item.baseCalculo, 0);
+                const totalISSValue = filteredData.reduce((sum, item) => sum + item.valorISS, 0);
+                const uniqueMunicipios = new Set(filteredData.map(item => item.municipio)).size;
+                
+                // Cálculo da alíquota média ponderada
+                let totalPonderado = 0;
+                let totalBasePonderada = 0;
+                
+                filteredData.forEach(item => {
+                    const base = Math.abs(item.baseCalculo);
+                    const aliquota = parseFloat(item.aliquota) || 0;
+                    totalPonderado += base * aliquota;
+                    totalBasePonderada += base;
+                });
+                
+                const avgAliquota = totalBasePonderada > 0 ? (totalPonderado / totalBasePonderada) : 0;
+                
+                totalBase.textContent = formatCurrency(totalBaseValue);
+                totalISS.textContent = formatCurrency(totalISSValue);
+                mediaAliquota.textContent = avgAliquota.toFixed(2) + '%';
+                totalMunicipios.textContent = uniqueMunicipios;
+            }
+
+            function updateAccumulatedData() {
+                if (importedData.length === 0) {
+                    accumulatedData.innerHTML = '<h3><i class="fas fa-database"></i> Dados Acumulados por Empresa e Período</h3><p>Nenhum dado disponível</p>';
+                    return;
+                }
+                
+                // Agrupar dados por empresa e período
+                const groupedData = importedData.reduce((acc, item) => {
+                    const key = `${item.empresa}_${item.competencia}`;
+                    if (!acc[key]) {
+                        acc[key] = {
+                            empresa: item.empresa,
+                            competencia: item.competencia,
+                            baseCalculo: 0,
+                            valorISS: 0,
+                            registros: 0,
+                            arquivos: new Set()
+                        };
+                    }
+                    acc[key].baseCalculo += item.baseCalculo;
+                    acc[key].valorISS += item.valorISS;
+                    acc[key].registros++;
+                    acc[key].arquivos.add(item.arquivo);
+                    return acc;
+                }, {});
+                
+                // Converter para array e ordenar
+                const sortedData = Object.values(groupedData).sort((a, b) => {
+                    if (a.empresa < b.empresa) return -1;
+                    if (a.empresa > b.empresa) return 1;
+                    return new Date(a.competencia) - new Date(b.competencia);
+                });
+                
+                // Gerar HTML
+                let html = '<h3><i class="fas fa-database"></i> Dados Acumulados por Empresa e Período</h3>';
+                
+                sortedData.forEach(group => {
+                    const arquivosList = Array.from(group.arquivos).map(arquivo => 
+                        `<li>${arquivo}</li>`
+                    ).join('');
+                    
+                    html += `
+                        <div class="accumulated-item">
+                            <div class="accumulated-header">
+                                <div>
+                                    <strong>${group.empresa}</strong> - ${group.competencia}
+                                    <span style="margin-left: 10px; font-size: 0.9em; color: #7f8c8d;">
+                                        ${group.registros} registros
+                                    </span>
+                                </div>
+                                <div>
+                                    <span style="margin-right: 15px;">${formatCurrency(group.baseCalculo)}</span>
+                                    <span>${formatCurrency(group.valorISS)}</span>
+                                </div>
+                            </div>
+                            <div class="accumulated-content">
+                                <p><strong>Arquivos importados:</strong></p>
+                                <ul style="margin-top: 5px;">
+                                    ${arquivosList}
+                                </ul>
+                                <p style="margin-top: 10px;">
+                                    <strong>Total Base de Cálculo:</strong> ${formatCurrency(group.baseCalculo)} | 
+                                    <strong>Total ISS:</strong> ${formatCurrency(group.valorISS)} | 
+                                    <strong>Alíquota Média:</strong> ${calculatePercentage(group.baseCalculo, group.valorISS)}
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                accumulatedData.innerHTML = html;
+                
+                // Adicionar eventos de clique para expandir/recolher
+                document.querySelectorAll('.accumulated-header').forEach(header => {
+                    header.addEventListener('click', function() {
+                        this.parentElement.classList.toggle('active');
+                    });
+                });
+            }
+
+            // 6. FUNÇÕES DE EXPORTAÇÃO
+            function exportToExcel() {
+                if (filteredData.length === 0) {
+                    alert('Nenhum dado para exportar');
+                    return;
+                }
+                
+                const worksheet = XLSX.utils.json_to_sheet(filteredData.map(item => ({
+                    'Empresa': item.empresa,
+                    'Município/Estado': item.municipio,
+                    'Competência': item.competencia,
+                    'Base de Cálculo': item.baseCalculo,
+                    'Valor ISS': item.valorISS,
+                    'Alíquota': item.aliquota,
+                    'Status': item.status === 'pago' ? 'Pago' : 'Pendente',
+                    'Observações': item.observacao || '',
+                    'Arquivo Origem': item.arquivo,
+                    'Data Importação': item.dataImportacao
+                })));
+                
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'Dados Fiscais');
+                XLSX.writeFile(workbook, 'dados_fiscais.xlsx');
+            }
+
+            function exportToPDF() {
+                if (filteredData.length === 0) {
+                    alert('Nenhum dado para exportar');
+                    return;
+                }
+                
+                const doc = new jsPDF();
+                doc.text('Relatório Fiscal', 105, 15, { align: 'center' });
+                doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, 22, { align: 'center' });
+                
+                const headers = [
+                    ['Empresa', 'Município', 'Competência', 'Base Cálculo', 'Valor ISS', 'Alíquota', 'Status']
+                ];
+                
+                const data = filteredData.map(item => [
+                    item.empresa,
+                    item.municipio,
+                    item.competencia,
+                    formatCurrency(item.baseCalculo),
+                    formatCurrency(item.valorISS),
+                    item.aliquota,
+                    item.status === 'pago' ? 'Pago' : 'Pendente'
+                ]);
+                
+                doc.autoTable({
+                    head: headers,
+                    body: data,
+                    startY: 30,
+                    styles: { fontSize: 8 },
+                    columnStyles: {
+                        0: { cellWidth: 'auto' },
+                        1: { cellWidth: 'auto' },
+                        2: { cellWidth: 'auto' },
+                        3: { cellWidth: 'auto' },
+                        4: { cellWidth: 'auto' },
+                        5: { cellWidth: 'auto' },
+                        6: { cellWidth: 'auto' }
+                    }
+                });
+                
+                doc.save('relatorio_fiscal.pdf');
+            }
+
+            // 7. FUNÇÕES UTILITÁRIAS
             function formatCurrency(value) {
                 return new Intl.NumberFormat('pt-BR', { 
                     style: 'currency', 
@@ -1088,44 +1352,128 @@
                 }).format(value);
             }
             
-            // Função para calcular porcentagem
             function calculatePercentage(base, value) {
-                if (base === 0) return '0%';
-                const percentage = (Math.abs(value) / Math.abs(base) * 100);
-                return percentage.toFixed(2) + '%';
+                if (!base || base === 0) return '0%';
+                return ((Math.abs(value) / Math.abs(base)) * 100).toFixed(2) + '%';
+            }
+            
+            function formatDate(date) {
+                if (!date) return '';
+                if (date instanceof Date) return date.toLocaleDateString('pt-BR');
+                
+                // Tentar parsear diferentes formatos
+                const formats = [
+                    { regex: /(\d{2})\/(\d{2})\/(\d{4})/, parts: [2, 1, 0] }, // DD/MM/YYYY
+                    { regex: /(\d{4})-(\d{2})-(\d{2})/, parts: [0, 1, 2] }, // YYYY-MM-DD
+                    { regex: /(\d{2})-(\d{2})-(\d{4})/, parts: [2, 1, 0] }  // MM-DD-YYYY
+                ];
+                
+                for (const format of formats) {
+                    const match = date.toString().match(format.regex);
+                    if (match) {
+                        const day = match[format.parts[2] + 1];
+                        const month = match[format.parts[1] + 1];
+                        const year = match[format.parts[0] + 1];
+                        return `${day}/${month}/${year}`;
+                    }
+                }
+                
+                return date.toString();
+            }
+            
+            function showLoading(show) {
+                loadingSpinner.style.display = show ? 'inline-block' : 'none';
+                importBtn.disabled = show;
+            }
+            
+            function showProgress(percentage) {
+                progress.style.width = `${percentage}%`;
+            }
+            
+            function hideProgress() {
+                progressBar.style.display = 'none';
+                progress.style.width = '0%';
+            }
+            
+            function setFileInfo(message, type = 'info') {
+                fileInfo.textContent = message;
+                fileInfo.className = '';
+                fileInfo.classList.add(`file-${type}`);
             }
 
-            // ... (mantenha as outras funções do seu código original como updateFilters, filterData, etc.)
+            // 8. FUNÇÕES DE EDIÇÃO
+            function openEditModal(index) {
+                const item = filteredData[index];
+                document.getElementById('editIndex').value = index;
+                document.getElementById('editEmpresa').value = item.empresa;
+                document.getElementById('editMunicipio').value = item.municipio;
+                document.getElementById('editCompetencia').value = item.competencia;
+                document.getElementById('editBaseCalculo').value = item.baseCalculo;
+                document.getElementById('editValorISS').value = item.valorISS;
+                document.getElementById('editStatus').value = item.status;
+                document.getElementById('editObservacao').value = item.observacao || '';
+                
+                editModal.style.display = 'flex';
+            }
+            
+            function closeEditModal() {
+                editModal.style.display = 'none';
+            }
+            
+            function saveEdit(e) {
+                e.preventDefault();
+                const index = document.getElementById('editIndex').value;
+                const item = filteredData[index];
+                
+                item.empresa = document.getElementById('editEmpresa').value;
+                item.municipio = document.getElementById('editMunicipio').value;
+                item.competencia = document.getElementById('editCompetencia').value;
+                item.baseCalculo = parseFloat(document.getElementById('editBaseCalculo').value);
+                item.valorISS = parseFloat(document.getElementById('editValorISS').value);
+                item.status = document.getElementById('editStatus').value;
+                item.observacao = document.getElementById('editObservacao').value;
+                item.aliquota = calculatePercentage(item.baseCalculo, item.valorISS);
+                
+                // Atualizar também no importedData
+                const originalIndex = importedData.findIndex(i => 
+                    i.empresa === item.empresa && 
+                    i.municipio === item.municipio && 
+                    i.competencia === item.competencia &&
+                    i.baseCalculo === item.baseCalculo &&
+                    i.valorISS === item.valorISS
+                );
+                
+                if (originalIndex !== -1) {
+                    importedData[originalIndex] = {...item};
+                }
+                
+                updateTable();
+                updateSummary();
+                updateAccumulatedData();
+                closeEditModal();
+            }
+            
+            function confirmDelete(index) {
+                if (confirm('Tem certeza que deseja excluir este registro?')) {
+                    const itemToDelete = filteredData[index];
+                    
+                    // Remover de ambos os conjuntos de dados
+                    filteredData = filteredData.filter((_, i) => i !== index);
+                    importedData = importedData.filter(item => 
+                        !(item.empresa === itemToDelete.empresa && 
+                          item.municipio === itemToDelete.municipio && 
+                          item.competencia === itemToDelete.competencia &&
+                          item.baseCalculo === itemToDelete.baseCalculo &&
+                          item.valorISS === itemToDelete.valorISS)
+                    );
+                    
+                    updateTable();
+                    updateSummary();
+                    updateAccumulatedData();
+                }
+            }
 
-            // Restante dos event listeners
-            filterEmpresa.addEventListener('change', function() {
-                currentPage = 1;
-                filterData();
-            });
-            
-            filterMunicipio.addEventListener('change', function() {
-                currentPage = 1;
-                filterData();
-            });
-            
-            filterCompetencia.addEventListener('change', function() {
-                currentPage = 1;
-                filterData();
-            });
-            
-            filterPeriodo.addEventListener('change', function() {
-                currentPage = 1;
-                filterData();
-            });
-            
-            searchInput.addEventListener('input', function() {
-                currentPage = 1;
-                filterData();
-            });
-            
-            exportExcelBtn.addEventListener('click', exportToExcel);
-            exportPDFBtn.addEventListener('click', exportToPDF);
-            
+            // 9. OUTROS EVENT LISTENERS
             resetFiltersBtn.addEventListener('click', function() {
                 filterEmpresa.value = '';
                 filterMunicipio.value = '';
@@ -1163,11 +1511,9 @@
                 tab.addEventListener('click', function() {
                     const tabId = this.getAttribute('data-tab');
                     
-                    // Ativa tab clicada
                     tabs.forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
                     
-                    // Mostra conteúdo correspondente
                     tabContents.forEach(content => {
                         content.classList.remove('active');
                         if (content.id === `${tabId}-tab`) {
@@ -1177,7 +1523,7 @@
                 });
             });
             
-            // Controle do modal de edição
+            // Modal de edição
             editForm.addEventListener('submit', saveEdit);
             cancelEditBtn.addEventListener('click', closeEditModal);
             deleteBtn.addEventListener('click', function() {
@@ -1186,14 +1532,19 @@
                 confirmDelete(index);
             });
             
-            // Fecha o modal ao clicar fora
+            // Fechar modal ao clicar fora
             window.addEventListener('click', function(event) {
                 if (event.target === editModal) {
                     closeEditModal();
                 }
             });
-
-            // ... (implemente as outras funções do seu código como updateTable, updatePagination, etc.)
+            
+            // Exportação
+            exportExcelBtn.addEventListener('click', exportToExcel);
+            exportPDFBtn.addEventListener('click', exportToPDF);
+            
+            // Inicialização
+            updateTable();
         });
     </script>
 </body>

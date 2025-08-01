@@ -1,3 +1,4 @@
+analise meu site
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -358,6 +359,11 @@
             color: white;
         }
         
+        .status-proximo {
+            background-color: #f39c12;
+            color: white;
+        }
+        
         .observacao {
             font-size: 12px;
             color: #7f8c8d;
@@ -383,7 +389,7 @@
             padding: 25px;
             border-radius: 8px;
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
         
@@ -512,6 +518,74 @@
             display: block;
         }
         
+        .payment-reminder {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+        
+        .reminder-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .reminder-card {
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid;
+            background: #f8f9fa;
+        }
+        
+        .reminder-card.pendente {
+            border-left-color: #e74c3c;
+        }
+        
+        .reminder-card.proximo {
+            border-left-color: #f39c12;
+        }
+        
+        .reminder-card.pago {
+            border-left-color: #27ae60;
+        }
+        
+        .reminder-card h4 {
+            margin: 0 0 10px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .reminder-card .valor {
+            font-weight: bold;
+            font-size: 18px;
+            margin: 5px 0;
+        }
+        
+        .reminder-card .vencimento {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .reminder-card .proximos-vencimentos {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+        
+        .reminder-card .proximos-vencimentos ul {
+            margin: 5px 0 0 0;
+            padding-left: 20px;
+        }
+        
+        .reminder-card button.small {
+            margin-top: 10px;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
         @media (max-width: 768px) {
             .filters {
                 flex-direction: column;
@@ -538,6 +612,10 @@
             .company-card {
                 width: 100%;
             }
+            
+            .reminder-cards {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -550,6 +628,7 @@
         <div class="tabs">
             <div class="tab active" data-tab="import">Importar e Visualizar</div>
             <div class="tab" data-tab="reports">Relatórios</div>
+            <div class="tab" data-tab="calendar">Calendário</div>
         </div>
         
         <div class="tab-content active" id="import-tab">
@@ -628,6 +707,18 @@
                 </div>
                 
                 <div class="filter-item">
+                    <label for="filterStatus">
+                        <i class="fas fa-check-circle"></i> Status
+                    </label>
+                    <select id="filterStatus">
+                        <option value="">Todos</option>
+                        <option value="pago">Pago</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="proximo">Próximo do vencimento</option>
+                    </select>
+                </div>
+                
+                <div class="filter-item">
                     <label for="search">
                         <i class="fas fa-search"></i> Pesquisar
                     </label>
@@ -676,11 +767,21 @@
                 <button id="resetFiltersBtn" class="secondary">
                     <i class="fas fa-filter"></i> Limpar Filtros
                 </button>
+                <button id="checkPendingBtn" class="warning">
+                    <i class="fas fa-sync-alt"></i> Verificar Pendências
+                </button>
+            </div>
+            
+            <div class="payment-reminder">
+                <h3><i class="fas fa-bell"></i> Lembretes de Pagamento</h3>
+                <div class="reminder-cards" id="reminderCards">
+                    <p>Nenhum lembrete disponível. Importe dados para começar.</p>
+                </div>
             </div>
             
             <div class="data-accumulated" id="accumulatedData">
                 <h3><i class="fas fa-database"></i> Dados Acumulados por Empresa e Período</h3>
-                <!-- Os dados acumulados serão inseridos aqui pelo JavaScript -->
+                <p>Nenhum dado disponível</p>
             </div>
             
             <table id="dataTable">
@@ -690,6 +791,7 @@
                         <th>Empresa</th>
                         <th>Município/Estado</th>
                         <th>Competência</th>
+                        <th>Vencimento</th>
                         <th>Base Cálculo</th>
                         <th>Valor ISS</th>
                         <th>Alíquota</th>
@@ -699,7 +801,7 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td colspan="9">Importe um arquivo Excel para visualizar os dados</td>
+                        <td colspan="10">Importe um arquivo Excel para visualizar os dados</td>
                     </tr>
                 </tbody>
             </table>
@@ -742,6 +844,30 @@
                         <i class="fas fa-download"></i> Gerar Relatório
                     </button>
                 </div>
+                
+                <div class="summary-card">
+                    <div class="summary-title">
+                        <i class="fas fa-exclamation-triangle"></i> Relatório de Pendências
+                    </div>
+                    <p>Lista de todos os pagamentos pendentes e próximos do vencimento.</p>
+                    <button id="pendingReportBtn" class="warning">
+                        <i class="fas fa-download"></i> Gerar Relatório
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="calendar-tab">
+            <h2><i class="fas fa-calendar"></i> Calendário de Pagamentos</h2>
+            <div id="calendarContainer" style="margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <button id="prevMonthBtn"><i class="fas fa-chevron-left"></i> Mês Anterior</button>
+                    <h3 id="currentMonthYear">Julho 2023</h3>
+                    <button id="nextMonthBtn">Próximo Mês <i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;">
+                    <!-- Calendar will be generated here -->
+                </div>
             </div>
         </div>
     </div>
@@ -752,6 +878,7 @@
             <h3><i class="fas fa-edit"></i> Editar Registro</h3>
             <form id="editForm">
                 <input type="hidden" id="editIndex">
+                <input type="hidden" id="editMunicipioCodigo">
                 
                 <div class="form-group">
                     <label for="editEmpresa">Empresa</label>
@@ -774,6 +901,16 @@
                 </div>
                 
                 <div class="form-group">
+                    <label for="editVencimento">Vencimento</label>
+                    <input type="date" id="editVencimento">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editDiaVencimento">Dia do Vencimento</label>
+                    <input type="number" id="editDiaVencimento" min="1" max="31" required>
+                </div>
+                
+                <div class="form-group">
                     <label for="editBaseCalculo">Base de Cálculo (R$)</label>
                     <input type="number" step="0.01" id="editBaseCalculo" required>
                 </div>
@@ -788,6 +925,7 @@
                     <select id="editStatus">
                         <option value="pendente">Pendente</option>
                         <option value="pago">Pago</option>
+                        <option value="proximo">Próximo do vencimento</option>
                     </select>
                 </div>
                 
@@ -824,6 +962,7 @@
             const filterMunicipio = document.getElementById('filterMunicipio');
             const filterCompetencia = document.getElementById('filterCompetencia');
             const filterPeriodo = document.getElementById('filterPeriodo');
+            const filterStatus = document.getElementById('filterStatus');
             const searchInput = document.getElementById('search');
             const totalBase = document.getElementById('totalBase');
             const totalISS = document.getElementById('totalISS');
@@ -832,6 +971,7 @@
             const exportExcelBtn = document.getElementById('exportExcelBtn');
             const exportPDFBtn = document.getElementById('exportPDFBtn');
             const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+            const checkPendingBtn = document.getElementById('checkPendingBtn');
             const dropZone = document.getElementById('dropZone');
             const tabs = document.querySelectorAll('.tab');
             const tabContents = document.querySelectorAll('.tab-content');
@@ -841,6 +981,11 @@
             const deleteBtn = document.getElementById('deleteBtn');
             const companySelection = document.getElementById('companySelection');
             const accumulatedData = document.getElementById('accumulatedData');
+            const reminderCards = document.getElementById('reminderCards');
+            const currentMonthYear = document.getElementById('currentMonthYear');
+            const prevMonthBtn = document.getElementById('prevMonthBtn');
+            const nextMonthBtn = document.getElementById('nextMonthBtn');
+            const calendarGrid = document.getElementById('calendarGrid');
             
             // Variáveis de estado
             let selectedCompany = null;
@@ -849,9 +994,168 @@
             let filteredData = [];
             let currentPage = 1;
             const itemsPerPageValue = 25;
+            let currentCalendarDate = new Date();
+            
+            // Mapeamento completo de municípios com códigos e vencimentos
+            let municipiosVencimento = {
+                'PR 4100459': {nome: 'ALTAMIRA DO PARANÁ', vencimento: 5},
+                'MG 3106200': {nome: 'BELO HORIZONTE', vencimento: 5},
+                'RS 4302055': {nome: 'BENJAMIN CONSTANT DO SUL', vencimento: 5},
+                'SC 4202537': {nome: 'BOM JESUS', vencimento: 5},
+                'RS 4302907': {nome: 'CACEQUI', vencimento: 5},
+                'PR 4104428': {nome: 'CANDÓI', vencimento: 5},
+                'RS 4305439': {nome: 'CHUÍ', vencimento: 5},
+                'RS 4306379': {nome: 'DILERMANDO DE AGUIAR', vencimento: 5},
+                'RS 4306601': {nome: 'DOM PEDRITO', vencimento: 5},
+                'RS 4306908': {nome: 'ENCRUZILHADA DO SUL', vencimento: 5},
+                'RS 4307203': {nome: 'ERVAL GRANDE', vencimento: 5},
+                'RS 4308250': {nome: 'FLORIANO PEIXOTO', vencimento: 5},
+                'SC 4205506': {nome: 'FRAIBURGO', vencimento: 5},
+                'RS 4309001': {nome: 'GIRUÁ', vencimento: 5},
+                'RS 4309050': {nome: 'GLORINHA', vencimento: 5},
+                'PR 4110003': {nome: 'IGUARAÇU', vencimento: 5},
+                'RS 4310900': {nome: 'JACUTINGA', vencimento: 5},
+                'MG 3136702': {nome: 'JUIZ DE FORA', vencimento: 5},
+                'SC 4209409': {nome: 'LAGUNA', vencimento: 5},
+                'RS 4311502': {nome: 'LAVRAS DO SUL', vencimento: 5},
+                'RJ 3303302': {nome: 'NITERÓI', vencimento: 5},
+                'RS 4314506': {nome: 'PINHEIRO MACHADO', vencimento: 5},
+                'RS 4314803': {nome: 'PORTÃO', vencimento: 5},
+                'PR 4122008': {nome: 'RIO AZUL', vencimento: 5},
+                'PR 4122503': {nome: 'RONCADOR', vencimento: 5},
+                'RS 4316402': {nome: 'ROSÁRIO DO SUL', vencimento: 5},
+                'RS 4319703': {nome: 'SÃO VALENTIM', vencimento: 5},
+                'RS 4320552': {nome: 'SERTÃO SANTANA', vencimento: 5},
+                'RS 4321600': {nome: 'TRAMANDAÍ', vencimento: 5},
+                'RS 4323002': {nome: 'VIAMÃO', vencimento: 5},
+                'SC 4200051': {nome: 'ABDON BATISTA', vencimento: 10},
+                'SC 4200606': {nome: 'ÁGUAS MORNAS', vencimento: 10},
+                'PR 4100301': {nome: 'AGUDOS DO SUL', vencimento: 10},
+                'RS 4300406': {nome: 'ALEGRETE', vencimento: 10},
+                'RS 4300604': {nome: 'ALVORADA', vencimento: 10},
+                'MS 5000609': {nome: 'AMAMBAÍ', vencimento: 10},
+                'PR 4100905': {nome: 'AMAPORÃ', vencimento: 10},
+                'RS 4300646': {nome: 'AMETISTA DO SUL', vencimento: 10},
+                'SC 4201000': {nome: 'ANITA GARIBALDI', vencimento: 10},
+                'MS 5000906': {nome: 'ANTÔNIO JOÃO', vencimento: 10},
+                'PR 4101408': {nome: 'APUCARANA', vencimento: 10},
+                'SC 4201307': {nome: 'ARAQUARI', vencimento: 10},
+                'RS 4300877': {nome: 'ARARICÁ', vencimento: 10},
+                'RS 4301305': {nome: 'ARROIO GRANDE', vencimento: 10},
+                'RS 4301602': {nome: 'BAGÉ', vencimento: 10},
+                'SC 4202057': {nome: 'BALNEÁRIO BARRA DO SUL', vencimento: 10},
+                'SC 4202008': {nome: 'BALNEÁRIO CAMBORIÚ', vencimento: 10},
+                'PR 4102307': {nome: 'BALSA NOVA', vencimento: 10},
+                'MG 3144805': {nome: 'NOVA LIMA', vencimento: 10},
+                'SC 4202404': {nome: 'BLUMENAU', vencimento: 10},
+                'SC 4202800': {nome: 'BRAÇO DO NORTE', vencimento: 10},
+                'SC 4202909': {nome: 'BRUSQUE', vencimento: 10},
+                'RS 4303103': {nome: 'CACHOEIRINHA', vencimento: 10},
+                'PR 4103479': {nome: 'CAFEZAL DO SUL', vencimento: 10},
+                'PR 4103503': {nome: 'CALIFÓRNIA', vencimento: 10},
+                'RS 4303509': {nome: 'CAMAQUÃ', vencimento: 10},
+                'PR 4103800': {nome: 'CAMBIRA', vencimento: 10},
+                'SC 4203204': {nome: 'CAMBORIÚ', vencimento: 10},
+                'SC 4203402': {nome: 'CAMPO BELO DO SUL', vencimento: 10},
+                'RS 4303905': {nome: 'CAMPO BOM', vencimento: 10},
+                'PR 4104055': {nome: 'CAMPO BONITO', vencimento: 10},
+                'SC 4203253': {nome: 'CAPÃO ALTO', vencimento: 10},
+                'RS 4304622': {nome: 'CAPÃO BONITO DO SUL', vencimento: 10},
+                'SC 4203956': {nome: 'CAPIVARI DE BAIXO', vencimento: 10},
+                'RS 4304713': {nome: 'CARAÁ', vencimento: 10},
+                'RS 4304903': {nome: 'CASCA', vencimento: 10},
+                'RS 4305207': {nome: 'CERRO LARGO', vencimento: 10},
+                'SC 4204251': {nome: 'COCAL DO SUL', vencimento: 10},
+                'RS 4305587': {nome: 'COLINAS', vencimento: 10},
+                'PR 4105805': {nome: 'COLOMBO', vencimento: 10},
+                'PR 4106209': {nome: 'CONTENDA', vencimento: 10},
+                'SC 4204350': {nome: 'CORDILHEIRA ALTA', vencimento: 10},
+                'RS 4305934': {nome: 'CORONEL PILAR', vencimento: 10},
+                'RS 4306130': {nome: 'CRUZALTENSE', vencimento: 10},
+                'MT 5103403': {nome: 'CUIABÁ', vencimento: 10},
+                'PR 4107009': {nome: 'CURIÚVA', vencimento: 10},
+                'RS 4306304': {nome: 'DAVID CANABARRO', vencimento: 10},
+                'MS 5003454': {nome: 'DEODÁPOLIS', vencimento: 10},
+                'RS 4306320': {nome: 'DERRUBADAS', vencimento: 10},
+                'RS 4306353': {nome: 'DEZESSEIS DE NOVEMBRO', vencimento: 10},
+                'PR 4107108': {nome: 'DIAMANTE DO NORTE', vencimento: 10},
+                'MS 5003504': {nome: 'DOURADINA', vencimento: 10},
+                'PR 4107504': {nome: 'ENGENHEIRO BELTRÃO', vencimento: 10},
+                'RS 4306932': {nome: 'ENTRE-IJUÍS', vencimento: 10},
+                'RS 4306973': {nome: 'EREBANGO', vencimento: 10},
+                'RS 4307609': {nome: 'ESTÂNCIA VELHA', vencimento: 10},
+                'RS 4307708': {nome: 'ESTEIO', vencimento: 10},
+                'MS 5003801': {nome: 'FÁTIMA DO SUL', vencimento: 10},
+                'PR 4107702': {nome: 'FÊNIX', vencimento: 10},
+                'PR 4107900': {nome: 'FLORESTA', vencimento: 10},
+                'SC 4205456': {nome: 'FORQUILHINHA', vencimento: 10},
+                'PR 4112108': {nome: 'JANDAIA DO SUL', vencimento: 25},
+                'PR 4113700': {nome: 'LONDRINA', vencimento: 20},
+                'RS 4313508': {nome: 'OSÓRIO', vencimento: 25},
+                'SP 3544251': {nome: 'ROSANA', vencimento: 25},
+                'PR 4100707': {nome: 'ALTO PIQUIRI', vencimento: 30},
+                'RS 4300802': {nome: 'ANTÔNIO PRADO', vencimento: 30},
+                'PR 4101606': {nome: 'ARAPOTI', vencimento: 30},
+                'SP 3503901': {nome: 'ARUJÁ', vencimento: 30},
+                'PR 4105409': {nome: 'CHOPINZINHO', vencimento: 30},
+                'RS 4305504': {nome: 'CIRÍACO', vencimento: 30},
+                'RS 4306403': {nome: 'DOIS IRMÃOS', vencimento: 30},
+                'RS 4307906': {nome: 'FARROUPILHA', vencimento: 30},
+                'PR 4108700': {nome: 'GRANDES RIOS', vencimento: 30},
+                'RS 4309407': {nome: 'GUAPORÉ', vencimento: 30},
+                'RS 4310207': {nome: 'IJUÍ', vencimento: 30},
+                'RS 4310462': {nome: 'IPIRANGA DO SUL', vencimento: 30},
+                'RS 4310553': {nome: 'ITACURUBI', vencimento: 30},
+                'PR 4111209': {nome: 'ITAPEJARA D\'OESTE', vencimento: 30},
+                'PR 4112207': {nome: 'JANIÓPOLIS', vencimento: 30},
+                'PR 4115309': {nome: 'MARIÓPOLIS', vencimento: 30},
+                'PR 4115457': {nome: 'MARQUINHO', vencimento: 30},
+                'RS 4310702': {nome: 'ITATIBA DO SUL', vencimento: 30},
+                'SC 4212601': {nome: 'PERITIBA', vencimento: 30},
+                'SC 4212809': {nome: 'BALNEÁRIO PIÇARRAS', vencimento: 30},
+                'PR 4120101': {nome: 'PORTO AMAZONAS', vencimento: 30},
+                'PR 4120606': {nome: 'PRUDENTÓPOLIS', vencimento: 30},
+                'PR 4121307': {nome: 'RANCHO ALEGRE', vencimento: 30},
+                'RS 4315800': {nome: 'ROCA SALES', vencimento: 30},
+                'PR 4122404': {nome: 'ROLÂNDIA', vencimento: 30},
+                'RS 4316303': {nome: 'ROQUE GONZALES', vencimento: 30},
+                'SC 4215653': {nome: 'SANTA ROSA DO SUL', vencimento: 30},
+                'PR 4127403': {nome: 'TERRA ROXA', vencimento: 30},
+                'PR 4128203': {nome: 'UNIÃO DA VITÓRIA', vencimento: 30},
+                'RS 4322707': {nome: 'VERA CRUZ', vencimento: 30},
+                'RS 4323754': {nome: 'VITÓRIA DAS MISSÕES', vencimento: 30},
+                'RS 4323804': {nome: 'XANGRI-LÁ', vencimento: 15},
+                'SC 4219705': {nome: 'XAXIM', vencimento: 30},
+                'PR 4100400': {nome: 'Almirante Tamandaré', vencimento: 10},
+                'PR 4101051': {nome: 'Anahy', vencimento: 10},
+                'PR 4103040': {nome: 'BOA VENTURA DE SÃO ROQUE', vencimento: 10},
+                'PR 4103354': {nome: 'Braganey', vencimento: 20},
+                'PR 4103453': {nome: 'Cafelândia', vencimento: 10},
+                'PR 4104253': {nome: 'Campo Magro', vencimento: 10},
+                'PR 4105201': {nome: 'CERRO AZUL', vencimento: 10},
+                'PR 4105300': {nome: 'Céu Azul', vencimento: 10},
+                'PR 4106308': {nome: 'Corbélia', vencimento: 15},
+                'PR 4107157': {nome: 'Diamante D\'Oeste', vencimento: 30},
+                'PR 4110052': {nome: 'Iguatu', vencimento: 10},
+                'PR 4111258': {nome: 'Itaperuçu', vencimento: 10},
+                'PR 4115739': {nome: 'Mato Rico', vencimento: 10},
+                'PR 4115804': {nome: 'Medianeira', vencimento: 10},
+                'PR 4116703': {nome: 'Nova Aurora', vencimento: 10},
+                'PR 4117453': {nome: 'Ouro Verde do Oeste', vencimento: 20},
+                'PR 4121257': {nome: 'Ramilândia', vencimento: 10},
+                'SC 4215307': {nome: 'SALETE', vencimento: 10},
+                'PR 4124020': {nome: 'Santa Tereza do Oeste', vencimento: 10},
+                'PR 4124053': {nome: 'Santa Terezinha de Itaipu', vencimento: 10},
+                'PR 4125407': {nome: 'São José da Boa Vista', vencimento: 10},
+                'PR 4125704': {nome: 'São Miguel do Iguaçu', vencimento: 10},
+                'PR 4125753': {nome: 'São Pedro do Iguaçu', vencimento: 10},
+                'PR 4127957': {nome: 'Tupãssi', vencimento: 5},
+                'PR 4128005': {nome: 'Ubiratã', vencimento: 10},
+                'PR 4128500': {nome: 'Wenceslau Braz', vencimento: 10}
+            };
 
-            // 1. SELEÇÃO DE EMPRESA
-            const companyCards = companySelection.querySelectorAll('.company-card');
+            // 1. SELEÇÃO DE EMPRESA - CORRIGIDO
+            const companyCards = document.querySelectorAll('.company-card');
             companyCards.forEach(card => {
                 card.addEventListener('click', function() {
                     companyCards.forEach(c => c.classList.remove('selected'));
@@ -862,17 +1166,20 @@
                 });
             });
 
-            // 2. SELEÇÃO DE ARQUIVO
-            selectFileBtn.addEventListener('click', () => excelFileInput.click());
-            excelFileInput.addEventListener('change', function() {
+            // 2. SELEÇÃO DE ARQUIVO - CORRIGIDO
+            document.getElementById('selectFileBtn').addEventListener('click', function() {
+                document.getElementById('excelFile').click();
+            });
+
+            document.getElementById('excelFile').addEventListener('change', function() {
                 if (this.files.length > 0) {
                     selectedFile = this.files[0];
                     setFileInfo(`Arquivo selecionado: ${selectedFile.name}`, 'info');
-                    importBtn.disabled = !selectedCompany;
+                    document.getElementById('importBtn').disabled = !selectedCompany;
                 } else {
                     selectedFile = null;
                     setFileInfo('', 'info');
-                    importBtn.disabled = true;
+                    document.getElementById('importBtn').disabled = true;
                 }
             });
 
@@ -894,7 +1201,7 @@
                 processExcel(selectedFile, selectedCompany);
             });
 
-            // 4. FUNÇÃO PRINCIPAL DE PROCESSAMENTO
+            // 4. FUNÇÃO PRINCIPAL DE PROCESSAMENTO - ATUALIZADA
             function processExcel(file, company) {
                 const reader = new FileReader();
                 
@@ -909,44 +1216,60 @@
                         
                         showProgress(60);
                         
-                        // Converter para JSON
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                        // Converter para JSON com cabeçalhos personalizados
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                            header: ['municipioCodigo', 'municipioNome', 'competencia', 'baseCalculo', 'valorISS', 'status'],
+                            range: 1 // Pula a primeira linha (cabeçalho)
+                        });
                         
-                        // Processar dados
-                        const processedData = jsonData.map(item => {
-                            // Adapte conforme a estrutura do seu Excel
-                            const baseCalculo = parseFloat(item['Base de Cálculo'] || item['Base Calculo'] || item['Base'] || 0);
-                            const valorISS = parseFloat(item['Valor ISS'] || item['ISS'] || item['Imposto'] || 0);
+                        const processedData = jsonData.map((item) => {
+                            // Verificar e corrigir município
+                            const municipioInfo = municipiosVencimento[item.municipioCodigo] || {
+                                nome: item.municipioNome || `MUNICÍPIO NÃO MAPEADO (${item.municipioCodigo})`,
+                                vencimento: 10
+                            };
+                            
+                            // Corrigir competência
+                            let competencia = item.competencia;
+                            if (!competencia) competencia = new Date().toLocaleDateString('pt-BR');
+                            
+                            // Corrigir status
+                            const status = item.status && item.status.toLowerCase() === 'ponderto' ? 'pendente' : 'pendente';
+                            
+                            // Calcular valores
+                            const baseCalculo = parseFloat(item.baseCalculo) || 0;
+                            const valorISS = parseFloat(item.valorISS) || 0;
+                            const aliquota = calculateAliquota(baseCalculo, valorISS);
                             
                             return {
                                 empresa: company,
-                                municipio: item['Município'] || item['Municipio'] || item['Local'] || '',
-                                competencia: formatDate(item['Competência'] || item['Competencia'] || item['Período'] || ''),
+                                municipioCodigo: item.municipioCodigo,
+                                municipio: municipioInfo.nome,
+                                competencia: competencia,
                                 baseCalculo: baseCalculo,
                                 valorISS: valorISS,
-                                aliquota: calculatePercentage(baseCalculo, valorISS),
-                                status: 'pendente',
-                                observacao: '',
+                                aliquota: aliquota,
+                                status: status,
+                                vencimento: calculateDueDate(competencia, item.municipioCodigo),
+                                diaVencimento: municipioInfo.vencimento,
                                 arquivo: file.name,
                                 dataImportacao: new Date().toLocaleString('pt-BR')
                             };
                         });
-
+                        
+                        console.log("Dados processados:", processedData);
+                        
                         importedData = [...importedData, ...processedData];
                         setFileInfo(`Arquivo processado com sucesso! ${processedData.length} registros importados.`, 'success');
                         
-                        // Atualizar interface
-                        updateFilters();
-                        filterData();
-                        updateSummary();
-                        updateAccumulatedData();
+                        updateUIAfterImport();
                         
                         exportExcelBtn.disabled = false;
                         exportPDFBtn.disabled = false;
 
                     } catch (error) {
                         console.error("Erro ao processar arquivo:", error);
-                        setFileInfo(`Erro: ${error.message}`, 'error');
+                        setFileInfo(`Erro na importação: ${error.message}`, 'error');
                     } finally {
                         showLoading(false);
                         hideProgress();
@@ -962,7 +1285,93 @@
                 reader.readAsArrayBuffer(file);
             }
 
+            // Funções auxiliares para datas
+            function calculateDueDate(competencia, municipioCodigo) {
+                if (!competencia) return 'A DEFINIR';
+                
+                try {
+                    const [day, month, year] = competencia.split('/');
+                    const municipio = municipiosVencimento[municipioCodigo] || {vencimento: 10};
+                    const vencimentoDay = municipio.vencimento;
+                    return `${vencimentoDay.toString().padStart(2, '0')}/${month}/${year}`;
+                } catch (e) {
+                    console.warn("Erro ao calcular vencimento", e);
+                    return 'A DEFINIR';
+                }
+            }
+            
+            function calculateAliquota(baseCalculo, valorISS) {
+                if (!baseCalculo || baseCalculo === 0) return '0%';
+                
+                // Garantir que estamos usando valores absolutos para cálculo
+                const base = Math.abs(baseCalculo);
+                const valor = Math.abs(valorISS);
+                
+                // Calcular com 4 casas decimais e arredondar para 2
+                const aliquota = (valor / base * 100).toFixed(4);
+                return parseFloat(aliquota).toFixed(2) + '%';
+            }
+
             // 5. FUNÇÕES DE ATUALIZAÇÃO DA INTERFACE
+            function updateUIAfterImport() {
+                checkPendingPayments();
+                updateFilters();
+                filterData();
+                updateSummary();
+                updateAccumulatedData();
+                updatePaymentReminders();
+                updateCalendar();
+            }
+            
+            function checkPendingPayments() {
+                const now = new Date();
+                const currentMonth = now.getMonth() + 1;
+                const currentYear = now.getFullYear();
+                
+                importedData = importedData.map(item => {
+                    // Verificar se existe competência antes de processar
+                    if (!item.competencia) {
+                        console.warn("Registro sem competência:", item);
+                        return item;
+                    }
+
+                    try {
+                        // Atualizar status para "próximo" se o vencimento estiver próximo
+                        if (item.status === 'pendente' && item.vencimento && item.vencimento !== 'A DEFINIR') {
+                            const [day, month, year] = item.vencimento.split('/');
+                            const vencimento = new Date(year, month - 1, day);
+                            const diffDays = Math.ceil((vencimento - now) / (1000 * 60 * 60 * 24));
+                            
+                            if (diffDays <= 7 && diffDays >= 0) {
+                                item.status = 'proximo';
+                            }
+                        }
+                        
+                        // Mover pendências antigas para o próximo mês
+                        if (item.status === 'pendente') {
+                            const [day, month, year] = item.competencia.split('/');
+                            const paymentDate = new Date(year, month - 1, day);
+                            
+                            // Se a competência é anterior ao mês atual, mover para o próximo mês
+                            if (paymentDate < new Date(currentYear, currentMonth - 1, 1)) {
+                                const newDate = new Date(paymentDate);
+                                newDate.setMonth(newDate.getMonth() + 1);
+                                
+                                return {
+                                    ...item,
+                                    competencia: newDate.toLocaleDateString('pt-BR'),
+                                    vencimento: item.vencimento === 'A DEFINIR' ? 'A DEFINIR' : calculateDueDate(newDate.toLocaleDateString('pt-BR'), item.municipioCodigo),
+                                    observacao: `Pendência movida do ${item.competencia} - ${item.observacao || ''}`
+                                };
+                            }
+                        }
+                    } catch (e) {
+                        console.warn("Erro ao processar registro:", item, e);
+                    }
+                    return item;
+                });
+            }
+
             function updateFilters() {
                 // Limpar filtros
                 filterMunicipio.innerHTML = '<option value="">Todos</option>';
@@ -971,18 +1380,22 @@
                 // Adicionar opções baseadas nos dados importados
                 const municipios = [...new Set(importedData.map(item => item.municipio))].sort();
                 municipios.forEach(municipio => {
-                    const option = document.createElement('option');
-                    option.value = municipio;
-                    option.textContent = municipio;
-                    filterMunicipio.appendChild(option);
+                    if (municipio) {
+                        const option = document.createElement('option');
+                        option.value = municipio;
+                        option.textContent = municipio;
+                        filterMunicipio.appendChild(option);
+                    }
                 });
                 
                 const competencias = [...new Set(importedData.map(item => item.competencia))].sort();
                 competencias.forEach(competencia => {
-                    const option = document.createElement('option');
-                    option.value = competencia;
-                    option.textContent = competencia;
-                    filterCompetencia.appendChild(option);
+                    if (competencia) {
+                        const option = document.createElement('option');
+                        option.value = competencia;
+                        option.textContent = competencia;
+                        filterCompetencia.appendChild(option);
+                    }
                 });
             }
 
@@ -991,27 +1404,40 @@
                 const municipioFilter = filterMunicipio.value;
                 const competenciaFilter = filterCompetencia.value;
                 const periodoFilter = filterPeriodo.value;
+                const statusFilter = filterStatus.value;
                 const searchTerm = searchInput.value.toLowerCase();
                 
                 filteredData = importedData.filter(item => {
                     if (empresaFilter && item.empresa !== empresaFilter) return false;
                     if (municipioFilter && item.municipio !== municipioFilter) return false;
                     if (competenciaFilter && item.competencia !== competenciaFilter) return false;
-                    if (periodoFilter) {
-                        const [year, month] = periodoFilter.split('-');
-                        const itemDate = new Date(item.competencia);
-                        if (isNaN(itemDate.getTime())) {
-                            // Tenta parsear datas no formato brasileiro
-                            const parts = item.competencia.split('/');
-                            if (parts.length === 3) {
-                                itemDate.setFullYear(parts[2], parts[1] - 1, parts[0]);
-                            } else {
+                    if (statusFilter) {
+                        if (statusFilter === 'proximo') {
+                            if (item.status !== 'pendente') return false;
+                            if (!item.vencimento || item.vencimento === 'A DEFINIR') return false;
+                            
+                            try {
+                                const [day, month, year] = item.vencimento.split('/');
+                                const vencimento = new Date(year, month - 1, day);
+                                const now = new Date();
+                                const diffDays = Math.ceil((vencimento - now) / (1000 * 60 * 60 * 24));
+                                
+                                if (diffDays > 7 || diffDays < 0) return false;
+                            } catch (e) {
                                 return false;
                             }
+                        } else if (item.status !== statusFilter) {
+                            return false;
                         }
-                        
-                        if (itemDate.getFullYear() != year || 
-                            (itemDate.getMonth() + 1).toString().padStart(2, '0') != month) return false;
+                    }
+                    if (periodoFilter) {
+                        const [year, month] = periodoFilter.split('-');
+                        try {
+                            const [day, compMonth, compYear] = item.competencia.split('/');
+                            if (compYear != year || compMonth != month) return false;
+                        } catch (e) {
+                            return false;
+                        }
                     }
                     if (searchTerm && !JSON.stringify(item).toLowerCase().includes(searchTerm)) return false;
                     return true;
@@ -1025,9 +1451,13 @@
                     if (a.municipio < b.municipio) return -1;
                     if (a.municipio > b.municipio) return 1;
                     
-                    const dateA = new Date(a.competencia);
-                    const dateB = new Date(b.competencia);
-                    return dateA - dateB;
+                    try {
+                        const dateA = new Date(a.competencia.split('/').reverse().join('-'));
+                        const dateB = new Date(b.competencia.split('/').reverse().join('-'));
+                        return dateA - dateB;
+                    } catch (e) {
+                        return 0;
+                    }
                 });
                 
                 currentPage = 1;
@@ -1042,7 +1472,7 @@
                 if (filteredData.length === 0) {
                     const row = dataTable.insertRow();
                     const cell = row.insertCell();
-                    cell.colSpan = 9;
+                    cell.colSpan = 10;
                     cell.textContent = 'Nenhum dado encontrado com os filtros aplicados';
                     updatePagination();
                     return;
@@ -1067,10 +1497,14 @@
                     row.insertCell().textContent = item.empresa;
                     
                     // Município
-                    row.insertCell().textContent = item.municipio;
+                    row.insertCell().textContent = item.municipio || '-';
                     
                     // Competência
-                    row.insertCell().textContent = item.competencia;
+                    row.insertCell().textContent = item.competencia || '-';
+                    
+                    // Vencimento
+                    const vencimentoCell = row.insertCell();
+                    vencimentoCell.textContent = item.vencimento || '-';
                     
                     // Base de Cálculo
                     const baseCell = row.insertCell();
@@ -1091,7 +1525,13 @@
                     const statusCell = row.insertCell();
                     const statusBadge = document.createElement('span');
                     statusBadge.className = `status-badge status-${item.status}`;
-                    statusBadge.textContent = item.status === 'pago' ? 'Pago' : 'Pendente';
+                    
+                    if (item.status === 'proximo') {
+                        statusBadge.textContent = 'Próximo';
+                    } else {
+                        statusBadge.textContent = item.status === 'pago' ? 'Pago' : 'Pendente';
+                    }
+                    
                     statusCell.appendChild(statusBadge);
                     
                     // Ações
@@ -1200,8 +1640,13 @@
                     return;
                 }
                 
-                // Agrupar dados por empresa e período
+                // Agrupar dados por empresa e período, ignorando registros sem competência
                 const groupedData = importedData.reduce((acc, item) => {
+                    if (!item.competencia) {
+                        console.warn("Registro ignorado por falta de competência:", item);
+                        return acc;
+                    }
+                    
                     const key = `${item.empresa}_${item.competencia}`;
                     if (!acc[key]) {
                         acc[key] = {
@@ -1224,7 +1669,8 @@
                 const sortedData = Object.values(groupedData).sort((a, b) => {
                     if (a.empresa < b.empresa) return -1;
                     if (a.empresa > b.empresa) return 1;
-                    return new Date(a.competencia) - new Date(b.competencia);
+                    return new Date(a.competencia.split('/').reverse().join('-')) - 
+                           new Date(b.competencia.split('/').reverse().join('-'));
                 });
                 
                 // Gerar HTML
@@ -1257,7 +1703,7 @@
                                 <p style="margin-top: 10px;">
                                     <strong>Total Base de Cálculo:</strong> ${formatCurrency(group.baseCalculo)} | 
                                     <strong>Total ISS:</strong> ${formatCurrency(group.valorISS)} | 
-                                    <strong>Alíquota Média:</strong> ${calculatePercentage(group.baseCalculo, group.valorISS)}
+                                    <strong>Alíquota Média:</strong> ${calculateAliquota(group.baseCalculo, group.valorISS)}
                                 </p>
                             </div>
                         </div>
@@ -1273,6 +1719,200 @@
                     });
                 });
             }
+            
+            function updatePaymentReminders() {
+                if (importedData.length === 0) {
+                    reminderCards.innerHTML = '<p>Nenhum lembrete disponível. Importe dados para começar.</p>';
+                    return;
+                }
+                
+                const now = new Date();
+                const nextWeek = new Date();
+                nextWeek.setDate(nextWeek.getDate() + 7);
+                
+                // Agrupar por empresa e status
+                const reminders = importedData.reduce((acc, item) => {
+                    const key = `${item.empresa}-${item.status}`;
+                    if (!acc[key]) {
+                        acc[key] = {
+                            empresa: item.empresa,
+                            status: item.status,
+                            count: 0,
+                            total: 0,
+                            items: []
+                        };
+                    }
+                    acc[key].count++;
+                    acc[key].total += item.valorISS;
+                    acc[key].items.push(item);
+                    return acc;
+                }, {});
+                
+                // Filtrar apenas pendentes e próximos
+                const filteredReminders = Object.values(reminders).filter(r => 
+                    r.status === 'pendente' || r.status === 'proximo'
+                );
+                
+                if (filteredReminders.length === 0) {
+                    reminderCards.innerHTML = '<p>Todos os pagamentos estão em dia!</p>';
+                    return;
+                }
+                
+                reminderCards.innerHTML = '';
+                
+                filteredReminders.forEach(reminder => {
+                    const card = document.createElement('div');
+                    card.className = `reminder-card ${reminder.status}`;
+                    
+                    const statusText = reminder.status === 'proximo' ? 'Próximo do vencimento' : 
+                                      reminder.status === 'pago' ? 'Pago' : 'Pendente';
+                    
+                    const pendingItems = reminder.items.filter(item => {
+                        if (item.status !== 'pendente' && item.status !== 'proximo') return false;
+                        if (!item.vencimento || item.vencimento === 'A DEFINIR') return false;
+                        
+                        try {
+                            const [day, month, year] = item.vencimento.split('/');
+                            const dueDate = new Date(year, month - 1, day);
+                            return dueDate <= nextWeek;
+                        } catch (e) {
+                            return false;
+                        }
+                    });
+                    
+                    card.innerHTML = `
+                        <h4>
+                            <span>${reminder.empresa}</span>
+                            <span class="status-badge status-${reminder.status}">${statusText}</span>
+                        </h4>
+                        <div class="valor">${formatCurrency(reminder.total)}</div>
+                        <div class="vencimento">${reminder.count} ${reminder.count === 1 ? 'item' : 'itens'}</div>
+                        ${pendingItems.length > 0 ? `
+                            <div class="proximos-vencimentos">
+                                <small>Próximos vencimentos:</small>
+                                <ul>
+                                    ${pendingItems.slice(0, 3).map(item => `
+                                        <li>${item.municipio} - ${item.vencimento}</li>
+                                    `).join('')}
+                                    ${pendingItems.length > 3 ? `<li>+ ${pendingItems.length - 3} outros</li>` : ''}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        <button class="small" onclick="filterByCompanyAndStatus('${reminder.empresa}', '${reminder.status}')">
+                            Ver detalhes
+                        </button>
+                    `;
+                    
+                    reminderCards.appendChild(card);
+                });
+            }
+            
+            function updateCalendar() {
+                const year = currentCalendarDate.getFullYear();
+                const month = currentCalendarDate.getMonth();
+                
+                currentMonthYear.textContent = `${getMonthName(month)} ${year}`;
+                calendarGrid.innerHTML = '';
+                
+                // Cabeçalhos dos dias da semana
+                const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+                daysOfWeek.forEach(day => {
+                    const dayHeader = document.createElement('div');
+                    dayHeader.style.fontWeight = 'bold';
+                    dayHeader.style.textAlign = 'center';
+                    dayHeader.style.padding = '5px';
+                    dayHeader.textContent = day;
+                    calendarGrid.appendChild(dayHeader);
+                });
+                
+                // Primeiro dia do mês
+                const firstDay = new Date(year, month, 1);
+                // Último dia do mês
+                const lastDay = new Date(year, month + 1, 0);
+                
+                // Dias do mês anterior para preencher a primeira semana
+                const startingDayOfWeek = firstDay.getDay();
+                for (let i = 0; i < startingDayOfWeek; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.style.minHeight = '100px';
+                    emptyDay.style.border = '1px solid #eee';
+                    calendarGrid.appendChild(emptyDay);
+                }
+                
+                // Dias do mês atual
+                for (let day = 1; day <= lastDay.getDate(); day++) {
+                    const currentDate = new Date(year, month, day);
+                    const dateStr = `${day.toString().padStart(2, '0')}/${(month + 1).toString().padStart(2, '0')}/${year}`;
+                    
+                    const dayCell = document.createElement('div');
+                    dayCell.style.minHeight = '100px';
+                    dayCell.style.border = '1px solid #eee';
+                    dayCell.style.padding = '5px';
+                    dayCell.style.position = 'relative';
+                    
+                    // Número do dia
+                    const dayNumber = document.createElement('div');
+                    dayNumber.textContent = day;
+                    dayNumber.style.fontWeight = 'bold';
+                    dayNumber.style.marginBottom = '5px';
+                    dayCell.appendChild(dayNumber);
+                    
+                    // Eventos/pagamentos para este dia
+                    const payments = importedData.filter(item => {
+                        if (!item.vencimento || item.vencimento === 'A DEFINIR') return false;
+                        try {
+                            const [d, m, y] = item.vencimento.split('/');
+                            return parseInt(d) === day && parseInt(m) === month + 1 && parseInt(y) === year;
+                        } catch (e) {
+                            return false;
+                        }
+                    });
+                    
+                    if (payments.length > 0) {
+                        const paymentsList = document.createElement('div');
+                        paymentsList.style.fontSize = '12px';
+                        
+                        payments.slice(0, 3).forEach(payment => {
+                            const paymentItem = document.createElement('div');
+                            paymentItem.style.marginBottom = '3px';
+                            paymentItem.style.padding = '2px';
+                            paymentItem.style.borderRadius = '3px';
+                            paymentItem.style.backgroundColor = payment.status === 'pago' ? '#e8f8f0' : 
+                                                              payment.status === 'proximo' ? '#fef9e7' : '#fae8e8';
+                            paymentItem.innerHTML = `
+                                <strong>${payment.empresa}</strong>: ${formatCurrency(payment.valorISS)}
+                            `;
+                            paymentsList.appendChild(paymentItem);
+                        });
+                        
+                        if (payments.length > 3) {
+                            const moreItems = document.createElement('div');
+                            moreItems.textContent = `+ ${payments.length - 3} mais`;
+                            moreItems.style.fontSize = '11px';
+                            moreItems.style.color = '#7f8c8d';
+                            paymentsList.appendChild(moreItems);
+                        }
+                        
+                        dayCell.appendChild(paymentsList);
+                    }
+                    
+                    // Destaque para o dia atual
+                    const today = new Date();
+                    if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                        dayCell.style.border = '2px solid var(--primary-color)';
+                    }
+                    
+                    calendarGrid.appendChild(dayCell);
+                }
+            }
+            
+            function getMonthName(monthIndex) {
+                const months = [
+                    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+                ];
+                return months[monthIndex];
+            }
 
             // 6. FUNÇÕES DE EXPORTAÇÃO
             function exportToExcel() {
@@ -1285,10 +1925,12 @@
                     'Empresa': item.empresa,
                     'Município/Estado': item.municipio,
                     'Competência': item.competencia,
+                    'Vencimento': item.vencimento || '',
                     'Base de Cálculo': item.baseCalculo,
                     'Valor ISS': item.valorISS,
                     'Alíquota': item.aliquota,
-                    'Status': item.status === 'pago' ? 'Pago' : 'Pendente',
+                    'Status': item.status === 'pago' ? 'Pago' : 
+                             item.status === 'proximo' ? 'Próximo do vencimento' : 'Pendente',
                     'Observações': item.observacao || '',
                     'Arquivo Origem': item.arquivo,
                     'Data Importação': item.dataImportacao
@@ -1310,17 +1952,19 @@
                 doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, 22, { align: 'center' });
                 
                 const headers = [
-                    ['Empresa', 'Município', 'Competência', 'Base Cálculo', 'Valor ISS', 'Alíquota', 'Status']
+                    ['Empresa', 'Município', 'Competência', 'Vencimento', 'Base Cálculo', 'Valor ISS', 'Alíquota', 'Status']
                 ];
                 
                 const data = filteredData.map(item => [
                     item.empresa,
-                    item.municipio,
-                    item.competencia,
+                    item.municipio || '-',
+                    item.competencia || '-',
+                    item.vencimento || '-',
                     formatCurrency(item.baseCalculo),
                     formatCurrency(item.valorISS),
                     item.aliquota,
-                    item.status === 'pago' ? 'Pago' : 'Pendente'
+                    item.status === 'pago' ? 'Pago' : 
+                    item.status === 'proximo' ? 'Próximo' : 'Pendente'
                 ]);
                 
                 doc.autoTable({
@@ -1335,7 +1979,8 @@
                         3: { cellWidth: 'auto' },
                         4: { cellWidth: 'auto' },
                         5: { cellWidth: 'auto' },
-                        6: { cellWidth: 'auto' }
+                        6: { cellWidth: 'auto' },
+                        7: { cellWidth: 'auto' }
                     }
                 });
                 
@@ -1351,36 +1996,7 @@
                     maximumFractionDigits: 2
                 }).format(value);
             }
-            
-            function calculatePercentage(base, value) {
-                if (!base || base === 0) return '0%';
-                return ((Math.abs(value) / Math.abs(base)) * 100).toFixed(2) + '%';
-            }
-            
-            function formatDate(date) {
-                if (!date) return '';
-                if (date instanceof Date) return date.toLocaleDateString('pt-BR');
-                
-                // Tentar parsear diferentes formatos
-                const formats = [
-                    { regex: /(\d{2})\/(\d{2})\/(\d{4})/, parts: [2, 1, 0] }, // DD/MM/YYYY
-                    { regex: /(\d{4})-(\d{2})-(\d{2})/, parts: [0, 1, 2] }, // YYYY-MM-DD
-                    { regex: /(\d{2})-(\d{2})-(\d{4})/, parts: [2, 1, 0] }  // MM-DD-YYYY
-                ];
-                
-                for (const format of formats) {
-                    const match = date.toString().match(format.regex);
-                    if (match) {
-                        const day = match[format.parts[2] + 1];
-                        const month = match[format.parts[1] + 1];
-                        const year = match[format.parts[0] + 1];
-                        return `${day}/${month}/${year}`;
-                    }
-                }
-                
-                return date.toString();
-            }
-            
+
             function showLoading(show) {
                 loadingSpinner.style.display = show ? 'inline-block' : 'none';
                 importBtn.disabled = show;
@@ -1407,7 +2023,22 @@
                 document.getElementById('editIndex').value = index;
                 document.getElementById('editEmpresa').value = item.empresa;
                 document.getElementById('editMunicipio').value = item.municipio;
+                document.getElementById('editMunicipioCodigo').value = item.municipioCodigo;
                 document.getElementById('editCompetencia').value = item.competencia;
+                
+                // Formatar vencimento para o input date (YYYY-MM-DD)
+                if (item.vencimento && item.vencimento !== 'A DEFINIR') {
+                    try {
+                        const [day, month, year] = item.vencimento.split('/');
+                        document.getElementById('editVencimento').value = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                    } catch (e) {
+                        document.getElementById('editVencimento').value = '';
+                    }
+                } else {
+                    document.getElementById('editVencimento').value = '';
+                }
+                
+                document.getElementById('editDiaVencimento').value = item.diaVencimento || 10;
                 document.getElementById('editBaseCalculo').value = item.baseCalculo;
                 document.getElementById('editValorISS').value = item.valorISS;
                 document.getElementById('editStatus').value = item.status;
@@ -1424,15 +2055,45 @@
                 e.preventDefault();
                 const index = document.getElementById('editIndex').value;
                 const item = filteredData[index];
+                const municipioCodigo = document.getElementById('editMunicipioCodigo').value;
+                const diaVencimento = parseInt(document.getElementById('editDiaVencimento').value);
+                
+                // Atualizar a base de dados de vencimentos se necessário
+                if (!municipiosVencimento[municipioCodigo]) {
+                    municipiosVencimento[municipioCodigo] = {
+                        nome: document.getElementById('editMunicipio').value,
+                        vencimento: diaVencimento
+                    };
+                    alert('Novo município cadastrado na base de vencimentos!');
+                } else if (municipiosVencimento[municipioCodigo].vencimento !== diaVencimento) {
+                    municipiosVencimento[municipioCodigo].vencimento = diaVencimento;
+                    alert('Vencimento atualizado na base de dados!');
+                }
                 
                 item.empresa = document.getElementById('editEmpresa').value;
                 item.municipio = document.getElementById('editMunicipio').value;
+                item.municipioCodigo = municipioCodigo;
                 item.competencia = document.getElementById('editCompetencia').value;
+                
+                // Formatar vencimento de volta para DD/MM/YYYY
+                const vencimentoDate = document.getElementById('editVencimento').value;
+                if (vencimentoDate) {
+                    try {
+                        const [year, month, day] = vencimentoDate.split('-');
+                        item.vencimento = `${day}/${month}/${year}`;
+                    } catch (e) {
+                        item.vencimento = 'A DEFINIR';
+                    }
+                } else {
+                    item.vencimento = 'A DEFINIR';
+                }
+                
                 item.baseCalculo = parseFloat(document.getElementById('editBaseCalculo').value);
                 item.valorISS = parseFloat(document.getElementById('editValorISS').value);
                 item.status = document.getElementById('editStatus').value;
                 item.observacao = document.getElementById('editObservacao').value;
-                item.aliquota = calculatePercentage(item.baseCalculo, item.valorISS);
+                item.aliquota = calculateAliquota(item.baseCalculo, item.valorISS);
+                item.diaVencimento = diaVencimento;
                 
                 // Atualizar também no importedData
                 const originalIndex = importedData.findIndex(i => 
@@ -1447,9 +2108,7 @@
                     importedData[originalIndex] = {...item};
                 }
                 
-                updateTable();
-                updateSummary();
-                updateAccumulatedData();
+                updateUIAfterImport();
                 closeEditModal();
             }
             
@@ -1467,9 +2126,7 @@
                           item.valorISS === itemToDelete.valorISS)
                     );
                     
-                    updateTable();
-                    updateSummary();
-                    updateAccumulatedData();
+                    updateUIAfterImport();
                 }
             }
 
@@ -1479,9 +2136,16 @@
                 filterMunicipio.value = '';
                 filterCompetencia.value = '';
                 filterPeriodo.value = '';
+                filterStatus.value = '';
                 searchInput.value = '';
                 currentPage = 1;
                 filterData();
+            });
+            
+            checkPendingBtn.addEventListener('click', function() {
+                checkPendingPayments();
+                updateUIAfterImport();
+                setFileInfo('Pendências verificadas com sucesso', 'success');
             });
             
             // Drag and drop
@@ -1543,9 +2207,45 @@
             exportExcelBtn.addEventListener('click', exportToExcel);
             exportPDFBtn.addEventListener('click', exportToPDF);
             
+            // Navegação do calendário
+            prevMonthBtn.addEventListener('click', function() {
+                currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+                updateCalendar();
+            });
+            
+            nextMonthBtn.addEventListener('click', function() {
+                currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+                updateCalendar();
+            });
+            
+            // Filtros dinâmicos
+            [filterEmpresa, filterMunicipio, filterCompetencia, filterPeriodo, filterStatus, searchInput].forEach(filter => {
+                filter.addEventListener('change', filterData);
+            });
+            
+            searchInput.addEventListener('input', filterData);
+            
             // Inicialização
-            updateTable();
+            updateCalendar();
         });
+        
+        // Função global para filtros (usada nos cards de lembrete)
+        function filterByCompanyAndStatus(company, status) {
+            document.getElementById('filterEmpresa').value = company;
+            document.getElementById('filterStatus').value = status;
+            
+            // Disparar evento de mudança para aplicar os filtros
+            const event = new Event('change');
+            document.getElementById('filterEmpresa').dispatchEvent(event);
+            document.getElementById('filterStatus').dispatchEvent(event);
+            
+            // Ativar a aba de importação
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            document.querySelector(`.tab[data-tab="import"]`).classList.add('active');
+            document.getElementById('import-tab').classList.add('active');
+        }
     </script>
 </body>
 </html>

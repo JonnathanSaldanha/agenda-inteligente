@@ -36,6 +36,35 @@
             box-shadow: var(--card-shadow);
         }
         
+        /* Estilos para as linhas agrupadas */
+        .group-row {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .group-row.expanded {
+            background-color: #e8f4fc;
+        }
+
+        .detail-row {
+            background-color: #f8f9fa;
+        }
+
+        .detail-row:nth-child(even) {
+            background-color: #ffffff;
+        }
+
+        /* Ícone de expansão */
+        .expand-icon {
+            margin-right: 5px;
+            transition: transform 0.3s ease;
+        }
+
+        .expanded .expand-icon {
+            transform: rotate(90deg);
+        }
+
+        /* Restante do seu CSS existente... */
         h1, h2, h3 {
             color: var(--secondary-color);
             margin-bottom: 20px;
@@ -1073,6 +1102,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // Funções de Loading Global
+        function showGlobalLoading(message) {
+            const loadingElement = document.getElementById('globalLoading');
+            const messageElement = loadingElement.querySelector('p');
+            
+            if (message) {
+                messageElement.textContent = message;
+            }
+            
+            loadingElement.style.display = 'flex';
+        }
+
+        function hideGlobalLoading() {
+            document.getElementById('globalLoading').style.display = 'none';
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             // Configuração inicial
             const { jsPDF } = window.jspdf;
@@ -1729,7 +1774,8 @@
     'PR 4128005': {nome: 'UBIRATÃ', vencimento: null},
     'PR 4128559': {nome: 'VERA CRUZ DO OESTE', vencimento: null},
     'PR 4128500': {nome: 'WENCESLAU BRAZ', vencimento: null}
-};
+
+            };
 
             // 1. SELEÇÃO DE EMPRESA
             const companyCards = document.querySelectorAll('.company-card');
@@ -1868,10 +1914,9 @@
                 if (!competencia) return 'A DEFINIR';
                 
                 try {
-                    const [day, month, year] = competencia.split('/');
+                    // Extrair apenas o dia do vencimento do município
                     const municipio = municipiosVencimento[municipioCodigo] || {vencimento: 10};
-                    const vencimentoDay = municipio.vencimento;
-                    return `${vencimentoDay.toString().padStart(2, '0')}/${month}/${year}`;
+                    return `${municipio.vencimento}`; // Retorna apenas o dia
                 } catch (e) {
                     console.warn("Erro ao calcular vencimento", e);
                     return 'A DEFINIR';
@@ -1919,7 +1964,7 @@
                     try {
                         // Atualizar status para "próximo" se o vencimento estiver próximo
                         if (item.status === 'pendente' && item.vencimento && item.vencimento !== 'A DEFINIR') {
-                            const [day, month, year] = item.vencimento.split('/');
+                            const [day, month, year] = item.competencia.split('/');
                             const vencimento = new Date(year, month - 1, day);
                             const diffDays = Math.ceil((vencimento - now) / (1000 * 60 * 60 * 24));
                             
@@ -1998,7 +2043,7 @@
                             if (!item.vencimento || item.vencimento === 'A DEFINIR') return false;
                             
                             try {
-                                const [day, month, year] = item.vencimento.split('/');
+                                const [day, month, year] = item.competencia.split('/');
                                 const vencimento = new Date(year, month - 1, day);
                                 const now = new Date();
                                 const diffDays = Math.ceil((vencimento - now) / (1000 * 60 * 60 * 24));
@@ -2061,84 +2106,203 @@
                     updatePagination();
                     return;
                 }
+
+                // Agrupar dados por município
+                const groupedData = filteredData.reduce((acc, item) => {
+                    const key = item.municipio;
+                    if (!acc[key]) {
+                        acc[key] = {
+                            municipio: item.municipio,
+                            empresa: item.empresa,
+                            competencia: item.competencia,
+                            baseCalculo: 0,
+                            valorISS: 0,
+                            items: [],
+                            expanded: false
+                        };
+                    }
+                    acc[key].baseCalculo += item.baseCalculo;
+                    acc[key].valorISS += item.valorISS;
+                    acc[key].items.push(item);
+                    return acc;
+                }, {});
+
+                const groupedArray = Object.values(groupedData);
                 
-                const startIndex = (currentPage - 1) * itemsPerPageValue;
-                const endIndex = Math.min(startIndex + itemsPerPageValue, filteredData.length);
-                const paginatedData = filteredData.slice(startIndex, endIndex);
-                
-                paginatedData.forEach((item, index) => {
-                    const row = dataTable.insertRow();
-                    const globalIndex = startIndex + index;
+                groupedArray.forEach((group, index) => {
+                    // Linha principal (agrupada)
+                    const mainRow = dataTable.insertRow();
+                    mainRow.classList.add('group-row');
+                    mainRow.dataset.groupIndex = index;
                     
                     // Checkbox
-                    const selectCell = row.insertCell();
+                    const selectCell = mainRow.insertCell();
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
-                    checkbox.dataset.index = globalIndex;
+                    checkbox.dataset.index = index;
                     selectCell.appendChild(checkbox);
                     
                     // Empresa
-                    row.insertCell().textContent = item.empresa;
+                    mainRow.insertCell().textContent = group.empresa;
                     
                     // Município
-                    row.insertCell().textContent = item.municipio || '-';
+                    const municipioCell = mainRow.insertCell();
+                    municipioCell.textContent = group.municipio || '-';
                     
                     // Competência
-                    row.insertCell().textContent = item.competencia || '-';
+                    mainRow.insertCell().textContent = group.competencia || '-';
                     
-                    // Vencimento
-                    const vencimentoCell = row.insertCell();
-                    vencimentoCell.textContent = item.vencimento || '-';
+                    // Vencimento (apenas o dia)
+                    const vencimentoCell = mainRow.insertCell();
+                    vencimentoCell.textContent = group.items[0].vencimento || '-';
                     
                     // Base de Cálculo
-                    const baseCell = row.insertCell();
-                    baseCell.textContent = formatCurrency(item.baseCalculo);
-                    baseCell.className = item.baseCalculo < 0 ? 'negative' : 'positive';
+                    const baseCell = mainRow.insertCell();
+                    baseCell.textContent = formatCurrency(group.baseCalculo);
+                    baseCell.className = group.baseCalculo < 0 ? 'negative' : 'positive';
                     
                     // Valor ISS
-                    const issCell = row.insertCell();
-                    issCell.textContent = formatCurrency(item.valorISS);
-                    issCell.className = item.valorISS < 0 ? 'negative' : 'positive';
+                    const issCell = mainRow.insertCell();
+                    issCell.textContent = formatCurrency(group.valorISS);
+                    issCell.className = group.valorISS < 0 ? 'negative' : 'positive';
                     
-                    // Alíquota
-                    const aliquotaCell = row.insertCell();
-                    aliquotaCell.textContent = item.aliquota;
+                    // Alíquota (média ponderada)
+                    const aliquotaCell = mainRow.insertCell();
+                    aliquotaCell.textContent = calculateAliquota(group.baseCalculo, group.valorISS);
                     aliquotaCell.className = 'aliquota';
                     
-                    // Status
-                    const statusCell = row.insertCell();
+                    // Status (mostra o status mais crítico)
+                    const statusCell = mainRow.insertCell();
                     const statusBadge = document.createElement('span');
-                    statusBadge.className = `status-badge status-${item.status}`;
                     
-                    if (item.status === 'proximo') {
-                        statusBadge.textContent = 'Próximo';
-                    } else {
-                        statusBadge.textContent = item.status === 'pago' ? 'Pago' : 'Pendente';
-                    }
+                    // Determinar o status mais crítico do grupo
+                    let worstStatus = 'pago';
+                    group.items.forEach(item => {
+                        if (item.status === 'pendente') worstStatus = 'pendente';
+                        else if (item.status === 'proximo' && worstStatus !== 'pendente') worstStatus = 'proximo';
+                    });
                     
+                    statusBadge.className = `status-badge status-${worstStatus}`;
+                    statusBadge.textContent = worstStatus === 'pago' ? 'Pago' : 
+                                             worstStatus === 'proximo' ? 'Próximo' : 'Pendente';
                     statusCell.appendChild(statusBadge);
                     
                     // Ações
-                    const actionsCell = row.insertCell();
-                    const buttonGroup = document.createElement('div');
-                    buttonGroup.className = 'button-group';
+                    const actionsCell = mainRow.insertCell();
+                    const expandButton = document.createElement('button');
+                    expandButton.className = 'secondary';
+                    expandButton.innerHTML = '<i class="fas fa-eye"></i> Detalhes';
+                    expandButton.onclick = () => toggleGroupDetails(index);
+                    actionsCell.appendChild(expandButton);
                     
-                    const editBtn = document.createElement('button');
-                    editBtn.className = 'secondary';
-                    editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-                    editBtn.onclick = () => openEditModal(globalIndex);
-                    
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'danger';
-                    deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
-                    deleteBtn.onclick = () => confirmDelete(globalIndex);
-                    
-                    buttonGroup.appendChild(editBtn);
-                    buttonGroup.appendChild(deleteBtn);
-                    actionsCell.appendChild(buttonGroup);
+                    // Linhas detalhadas (se expandido)
+                    if (group.expanded) {
+                        group.items.forEach((item, itemIndex) => {
+                            const detailRow = dataTable.insertRow();
+                            detailRow.classList.add('detail-row');
+                            detailRow.dataset.groupIndex = index;
+                            
+                            // Célula vazia para alinhamento
+                            detailRow.insertCell();
+                            
+                            // Empresa
+                            detailRow.insertCell().textContent = item.empresa;
+                            
+                            // Município
+                            detailRow.insertCell().textContent = item.municipio || '-';
+                            
+                            // Competência detalhada
+                            detailRow.insertCell().textContent = item.competencia || '-';
+                            
+                            // Vencimento detalhado (completo)
+                            const detailVencimentoCell = detailRow.insertCell();
+                            if (item.vencimento && item.vencimento !== 'A DEFINIR') {
+                                const [day, month, year] = item.competencia.split('/');
+                                detailVencimentoCell.textContent = `${day}/${month}/${year}`;
+                            } else {
+                                detailVencimentoCell.textContent = '-';
+                            }
+                            
+                            // Base de Cálculo detalhada
+                            const detailBaseCell = detailRow.insertCell();
+                            detailBaseCell.textContent = formatCurrency(item.baseCalculo);
+                            detailBaseCell.className = item.baseCalculo < 0 ? 'negative' : 'positive';
+                            
+                            // Valor ISS detalhado
+                            const detailIssCell = detailRow.insertCell();
+                            detailIssCell.textContent = formatCurrency(item.valorISS);
+                            detailIssCell.className = item.valorISS < 0 ? 'negative' : 'positive';
+                            
+                            // Alíquota detalhada
+                            const detailAliquotaCell = detailRow.insertCell();
+                            detailAliquotaCell.textContent = item.aliquota;
+                            detailAliquotaCell.className = 'aliquota';
+                            
+                            // Status detalhado
+                            const detailStatusCell = detailRow.insertCell();
+                            const detailStatusBadge = document.createElement('span');
+                            detailStatusBadge.className = `status-badge status-${item.status}`;
+                            detailStatusBadge.textContent = item.status === 'pago' ? 'Pago' : 
+                                                          item.status === 'proximo' ? 'Próximo' : 'Pendente';
+                            detailStatusCell.appendChild(detailStatusBadge);
+                            
+                            // Ações detalhadas
+                            const detailActionsCell = detailRow.insertCell();
+                            const detailButtonGroup = document.createElement('div');
+                            detailButtonGroup.className = 'button-group';
+                            
+                            const editBtn = document.createElement('button');
+                            editBtn.className = 'secondary';
+                            editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+                            editBtn.onclick = () => openEditModal(item);
+                            
+                            const deleteBtn = document.createElement('button');
+                            deleteBtn.className = 'danger';
+                            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                            deleteBtn.onclick = () => confirmDelete(item);
+                            
+                            detailButtonGroup.appendChild(editBtn);
+                            detailButtonGroup.appendChild(deleteBtn);
+                            detailActionsCell.appendChild(detailButtonGroup);
+                        });
+                    }
                 });
                 
                 updatePagination();
+            }
+
+            function toggleGroupDetails(groupIndex) {
+                // Encontrar o grupo correspondente nos dados filtrados
+                const municipios = [...new Set(filteredData.map(item => item.municipio))];
+                const municipio = municipios[groupIndex];
+                
+                // Encontrar o grupo nos dados agrupados
+                const groupedData = filteredData.reduce((acc, item) => {
+                    const key = item.municipio;
+                    if (!acc[key]) {
+                        acc[key] = {
+                            municipio: item.municipio,
+                            empresa: item.empresa,
+                            competencia: item.competencia,
+                            baseCalculo: 0,
+                            valorISS: 0,
+                            items: [],
+                            expanded: false
+                        };
+                    }
+                    acc[key].baseCalculo += item.baseCalculo;
+                    acc[key].valorISS += item.valorISS;
+                    acc[key].items.push(item);
+                    return acc;
+                }, {});
+                
+                // Alternar estado expandido
+                if (groupedData[municipio]) {
+                    groupedData[municipio].expanded = !groupedData[municipio].expanded;
+                }
+                
+                // Recarregar a tabela
+                updateTable();
             }
 
             function updatePagination() {
@@ -2356,7 +2520,7 @@
                         if (!item.vencimento || item.vencimento === 'A DEFINIR') return false;
                         
                         try {
-                            const [day, month, year] = item.vencimento.split('/');
+                            const [day, month, year] = item.competencia.split('/');
                             const dueDate = new Date(year, month - 1, day);
                             return dueDate <= nextWeek;
                         } catch (e) {
@@ -2445,7 +2609,7 @@
                     const payments = importedData.filter(item => {
                         if (!item.vencimento || item.vencimento === 'A DEFINIR') return false;
                         try {
-                            const [d, m, y] = item.vencimento.split('/');
+                            const [d, m, y] = item.competencia.split('/');
                             return parseInt(d) === day && parseInt(m) === month + 1 && parseInt(y) === year;
                         } catch (e) {
                             return false;
@@ -2602,9 +2766,8 @@
             }
 
             // 8. FUNÇÕES DE EDIÇÃO
-            function openEditModal(index) {
-                const item = filteredData[index];
-                document.getElementById('editIndex').value = index;
+            function openEditModal(item) {
+                document.getElementById('editIndex').value = importedData.indexOf(item);
                 document.getElementById('editEmpresa').value = item.empresa;
                 document.getElementById('editMunicipio').value = item.municipio;
                 document.getElementById('editMunicipioCodigo').value = item.municipioCodigo;
@@ -2613,7 +2776,7 @@
                 // Formatar vencimento para o input date (YYYY-MM-DD)
                 if (item.vencimento && item.vencimento !== 'A DEFINIR') {
                     try {
-                        const [day, month, year] = item.vencimento.split('/');
+                        const [day, month, year] = item.competencia.split('/');
                         document.getElementById('editVencimento').value = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
                     } catch (e) {
                         document.getElementById('editVencimento').value = '';
@@ -2638,7 +2801,7 @@
             function saveEdit(e) {
                 e.preventDefault();
                 const index = document.getElementById('editIndex').value;
-                const item = filteredData[index];
+                const item = importedData[index];
                 const municipioCodigo = document.getElementById('editMunicipioCodigo').value;
                 const diaVencimento = parseInt(document.getElementById('editDiaVencimento').value);
                 
@@ -2679,37 +2842,20 @@
                 item.aliquota = calculateAliquota(item.baseCalculo, item.valorISS);
                 item.diaVencimento = diaVencimento;
                 
-                // Atualizar também no importedData
-                const originalIndex = importedData.findIndex(i => 
-                    i.empresa === item.empresa && 
-                    i.municipio === item.municipio && 
-                    i.competencia === item.competencia &&
-                    i.baseCalculo === item.baseCalculo &&
-                    i.valorISS === item.valorISS
-                );
-                
-                if (originalIndex !== -1) {
-                    importedData[originalIndex] = {...item};
-                }
-                
                 updateUIAfterImport();
                 saveDataToStorage();
                 closeEditModal();
             }
             
-            function confirmDelete(index) {
+            function confirmDelete(item) {
                 if (confirm('Tem certeza que deseja excluir este registro?')) {
-                    const itemToDelete = filteredData[index];
-                    
                     // Remover de ambos os conjuntos de dados
-                    filteredData = filteredData.filter((_, i) => i !== index);
-                    importedData = importedData.filter(item => 
-                        !(item.empresa === itemToDelete.empresa && 
-                          item.municipio === itemToDelete.municipio && 
-                          item.competencia === itemToDelete.competencia &&
-                          item.baseCalculo === itemToDelete.baseCalculo &&
-                          item.valorISS === itemToDelete.valorISS)
-                    );
+                    const index = importedData.indexOf(item);
+                    if (index !== -1) {
+                        importedData.splice(index, 1);
+                    }
+                    
+                    filteredData = filteredData.filter(i => i !== item);
                     
                     updateUIAfterImport();
                     saveDataToStorage();
@@ -3028,7 +3174,7 @@
             deleteBtn.addEventListener('click', function() {
                 const index = document.getElementById('editIndex').value;
                 closeEditModal();
-                confirmDelete(index);
+                confirmDelete(importedData[index]);
             });
             
             // Fechar modal ao clicar fora

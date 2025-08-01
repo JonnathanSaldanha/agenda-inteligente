@@ -1,4 +1,3 @@
-analise meu site
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -586,6 +585,66 @@ analise meu site
             font-size: 12px;
         }
         
+        /* Global Loading */
+        .global-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        /* Gráficos */
+        .graph-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .graphs-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .graph-wrapper {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        @media (min-width: 1200px) {
+            .graphs-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
         @media (max-width: 768px) {
             .filters {
                 flex-direction: column;
@@ -616,10 +675,21 @@ analise meu site
             .reminder-cards {
                 grid-template-columns: 1fr;
             }
+            
+            .graph-filters {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
+    <div id="globalLoading" class="global-loading" style="display: none;">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p>Processando, por favor aguarde...</p>
+        </div>
+    </div>
+
     <div class="container">
         <h1>
             <i class="fas fa-chart-line"></i> Agenda Fiscal Inteligente
@@ -629,6 +699,7 @@ analise meu site
             <div class="tab active" data-tab="import">Importar e Visualizar</div>
             <div class="tab" data-tab="reports">Relatórios</div>
             <div class="tab" data-tab="calendar">Calendário</div>
+            <div class="tab" data-tab="graphs">Gráficos</div>
         </div>
         
         <div class="tab-content active" id="import-tab">
@@ -770,6 +841,9 @@ analise meu site
                 <button id="checkPendingBtn" class="warning">
                     <i class="fas fa-sync-alt"></i> Verificar Pendências
                 </button>
+                <button id="saveDataBtn" class="success">
+                    <i class="fas fa-save"></i> Salvar Dados
+                </button>
             </div>
             
             <div class="payment-reminder">
@@ -777,6 +851,9 @@ analise meu site
                 <div class="reminder-cards" id="reminderCards">
                     <p>Nenhum lembrete disponível. Importe dados para começar.</p>
                 </div>
+                <button id="sendRemindersBtn" class="success" style="margin-top: 20px;">
+                    <i class="fas fa-envelope"></i> Gerar Lembretes para E-mail
+                </button>
             </div>
             
             <div class="data-accumulated" id="accumulatedData">
@@ -870,6 +947,54 @@ analise meu site
                 </div>
             </div>
         </div>
+        
+        <div class="tab-content" id="graphs-tab">
+            <h2><i class="fas fa-chart-bar"></i> Relatórios Gráficos</h2>
+            
+            <div class="graph-filters">
+                <div class="filter-item">
+                    <label for="graphType">Tipo de Gráfico</label>
+                    <select id="graphType">
+                        <option value="bar">Barras</option>
+                        <option value="pie">Pizza</option>
+                        <option value="line">Linhas</option>
+                    </select>
+                </div>
+                
+                <div class="filter-item">
+                    <label for="graphMetric">Métrica</label>
+                    <select id="graphMetric">
+                        <option value="valorISS">Valor ISS</option>
+                        <option value="baseCalculo">Base de Cálculo</option>
+                        <option value="count">Quantidade</option>
+                    </select>
+                </div>
+                
+                <div class="filter-item">
+                    <label for="graphGroupBy">Agrupar por</label>
+                    <select id="graphGroupBy">
+                        <option value="empresa">Empresa</option>
+                        <option value="municipio">Município</option>
+                        <option value="competencia">Competência</option>
+                        <option value="status">Status</option>
+                    </select>
+                </div>
+                
+                <button id="updateGraphsBtn" class="success">
+                    <i class="fas fa-sync-alt"></i> Atualizar Gráficos
+                </button>
+            </div>
+            
+            <div class="graphs-container">
+                <div class="graph-wrapper">
+                    <canvas id="mainChart" height="400"></canvas>
+                </div>
+                
+                <div class="graph-wrapper">
+                    <canvas id="secondaryChart" height="400"></canvas>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal de Edição -->
@@ -946,6 +1071,7 @@ analise meu site
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Configuração inicial
@@ -972,6 +1098,8 @@ analise meu site
             const exportPDFBtn = document.getElementById('exportPDFBtn');
             const resetFiltersBtn = document.getElementById('resetFiltersBtn');
             const checkPendingBtn = document.getElementById('checkPendingBtn');
+            const saveDataBtn = document.getElementById('saveDataBtn');
+            const sendRemindersBtn = document.getElementById('sendRemindersBtn');
             const dropZone = document.getElementById('dropZone');
             const tabs = document.querySelectorAll('.tab');
             const tabContents = document.querySelectorAll('.tab-content');
@@ -986,6 +1114,7 @@ analise meu site
             const prevMonthBtn = document.getElementById('prevMonthBtn');
             const nextMonthBtn = document.getElementById('nextMonthBtn');
             const calendarGrid = document.getElementById('calendarGrid');
+            const updateGraphsBtn = document.getElementById('updateGraphsBtn');
             
             // Variáveis de estado
             let selectedCompany = null;
@@ -995,166 +1124,629 @@ analise meu site
             let currentPage = 1;
             const itemsPerPageValue = 25;
             let currentCalendarDate = new Date();
+            let mainChart, secondaryChart;
             
             // Mapeamento completo de municípios com códigos e vencimentos
             let municipiosVencimento = {
-                'PR 4100459': {nome: 'ALTAMIRA DO PARANÁ', vencimento: 5},
-                'MG 3106200': {nome: 'BELO HORIZONTE', vencimento: 5},
-                'RS 4302055': {nome: 'BENJAMIN CONSTANT DO SUL', vencimento: 5},
-                'SC 4202537': {nome: 'BOM JESUS', vencimento: 5},
-                'RS 4302907': {nome: 'CACEQUI', vencimento: 5},
-                'PR 4104428': {nome: 'CANDÓI', vencimento: 5},
-                'RS 4305439': {nome: 'CHUÍ', vencimento: 5},
-                'RS 4306379': {nome: 'DILERMANDO DE AGUIAR', vencimento: 5},
-                'RS 4306601': {nome: 'DOM PEDRITO', vencimento: 5},
-                'RS 4306908': {nome: 'ENCRUZILHADA DO SUL', vencimento: 5},
-                'RS 4307203': {nome: 'ERVAL GRANDE', vencimento: 5},
-                'RS 4308250': {nome: 'FLORIANO PEIXOTO', vencimento: 5},
-                'SC 4205506': {nome: 'FRAIBURGO', vencimento: 5},
-                'RS 4309001': {nome: 'GIRUÁ', vencimento: 5},
-                'RS 4309050': {nome: 'GLORINHA', vencimento: 5},
-                'PR 4110003': {nome: 'IGUARAÇU', vencimento: 5},
-                'RS 4310900': {nome: 'JACUTINGA', vencimento: 5},
-                'MG 3136702': {nome: 'JUIZ DE FORA', vencimento: 5},
-                'SC 4209409': {nome: 'LAGUNA', vencimento: 5},
-                'RS 4311502': {nome: 'LAVRAS DO SUL', vencimento: 5},
-                'RJ 3303302': {nome: 'NITERÓI', vencimento: 5},
-                'RS 4314506': {nome: 'PINHEIRO MACHADO', vencimento: 5},
-                'RS 4314803': {nome: 'PORTÃO', vencimento: 5},
-                'PR 4122008': {nome: 'RIO AZUL', vencimento: 5},
-                'PR 4122503': {nome: 'RONCADOR', vencimento: 5},
-                'RS 4316402': {nome: 'ROSÁRIO DO SUL', vencimento: 5},
-                'RS 4319703': {nome: 'SÃO VALENTIM', vencimento: 5},
-                'RS 4320552': {nome: 'SERTÃO SANTANA', vencimento: 5},
-                'RS 4321600': {nome: 'TRAMANDAÍ', vencimento: 5},
-                'RS 4323002': {nome: 'VIAMÃO', vencimento: 5},
-                'SC 4200051': {nome: 'ABDON BATISTA', vencimento: 10},
-                'SC 4200606': {nome: 'ÁGUAS MORNAS', vencimento: 10},
-                'PR 4100301': {nome: 'AGUDOS DO SUL', vencimento: 10},
-                'RS 4300406': {nome: 'ALEGRETE', vencimento: 10},
-                'RS 4300604': {nome: 'ALVORADA', vencimento: 10},
-                'MS 5000609': {nome: 'AMAMBAÍ', vencimento: 10},
-                'PR 4100905': {nome: 'AMAPORÃ', vencimento: 10},
-                'RS 4300646': {nome: 'AMETISTA DO SUL', vencimento: 10},
-                'SC 4201000': {nome: 'ANITA GARIBALDI', vencimento: 10},
-                'MS 5000906': {nome: 'ANTÔNIO JOÃO', vencimento: 10},
-                'PR 4101408': {nome: 'APUCARANA', vencimento: 10},
-                'SC 4201307': {nome: 'ARAQUARI', vencimento: 10},
-                'RS 4300877': {nome: 'ARARICÁ', vencimento: 10},
-                'RS 4301305': {nome: 'ARROIO GRANDE', vencimento: 10},
-                'RS 4301602': {nome: 'BAGÉ', vencimento: 10},
-                'SC 4202057': {nome: 'BALNEÁRIO BARRA DO SUL', vencimento: 10},
-                'SC 4202008': {nome: 'BALNEÁRIO CAMBORIÚ', vencimento: 10},
-                'PR 4102307': {nome: 'BALSA NOVA', vencimento: 10},
-                'MG 3144805': {nome: 'NOVA LIMA', vencimento: 10},
-                'SC 4202404': {nome: 'BLUMENAU', vencimento: 10},
-                'SC 4202800': {nome: 'BRAÇO DO NORTE', vencimento: 10},
-                'SC 4202909': {nome: 'BRUSQUE', vencimento: 10},
-                'RS 4303103': {nome: 'CACHOEIRINHA', vencimento: 10},
-                'PR 4103479': {nome: 'CAFEZAL DO SUL', vencimento: 10},
-                'PR 4103503': {nome: 'CALIFÓRNIA', vencimento: 10},
-                'RS 4303509': {nome: 'CAMAQUÃ', vencimento: 10},
-                'PR 4103800': {nome: 'CAMBIRA', vencimento: 10},
-                'SC 4203204': {nome: 'CAMBORIÚ', vencimento: 10},
-                'SC 4203402': {nome: 'CAMPO BELO DO SUL', vencimento: 10},
-                'RS 4303905': {nome: 'CAMPO BOM', vencimento: 10},
-                'PR 4104055': {nome: 'CAMPO BONITO', vencimento: 10},
-                'SC 4203253': {nome: 'CAPÃO ALTO', vencimento: 10},
-                'RS 4304622': {nome: 'CAPÃO BONITO DO SUL', vencimento: 10},
-                'SC 4203956': {nome: 'CAPIVARI DE BAIXO', vencimento: 10},
-                'RS 4304713': {nome: 'CARAÁ', vencimento: 10},
-                'RS 4304903': {nome: 'CASCA', vencimento: 10},
-                'RS 4305207': {nome: 'CERRO LARGO', vencimento: 10},
-                'SC 4204251': {nome: 'COCAL DO SUL', vencimento: 10},
-                'RS 4305587': {nome: 'COLINAS', vencimento: 10},
-                'PR 4105805': {nome: 'COLOMBO', vencimento: 10},
-                'PR 4106209': {nome: 'CONTENDA', vencimento: 10},
-                'SC 4204350': {nome: 'CORDILHEIRA ALTA', vencimento: 10},
-                'RS 4305934': {nome: 'CORONEL PILAR', vencimento: 10},
-                'RS 4306130': {nome: 'CRUZALTENSE', vencimento: 10},
-                'MT 5103403': {nome: 'CUIABÁ', vencimento: 10},
-                'PR 4107009': {nome: 'CURIÚVA', vencimento: 10},
-                'RS 4306304': {nome: 'DAVID CANABARRO', vencimento: 10},
-                'MS 5003454': {nome: 'DEODÁPOLIS', vencimento: 10},
-                'RS 4306320': {nome: 'DERRUBADAS', vencimento: 10},
-                'RS 4306353': {nome: 'DEZESSEIS DE NOVEMBRO', vencimento: 10},
-                'PR 4107108': {nome: 'DIAMANTE DO NORTE', vencimento: 10},
-                'MS 5003504': {nome: 'DOURADINA', vencimento: 10},
-                'PR 4107504': {nome: 'ENGENHEIRO BELTRÃO', vencimento: 10},
-                'RS 4306932': {nome: 'ENTRE-IJUÍS', vencimento: 10},
-                'RS 4306973': {nome: 'EREBANGO', vencimento: 10},
-                'RS 4307609': {nome: 'ESTÂNCIA VELHA', vencimento: 10},
-                'RS 4307708': {nome: 'ESTEIO', vencimento: 10},
-                'MS 5003801': {nome: 'FÁTIMA DO SUL', vencimento: 10},
-                'PR 4107702': {nome: 'FÊNIX', vencimento: 10},
-                'PR 4107900': {nome: 'FLORESTA', vencimento: 10},
-                'SC 4205456': {nome: 'FORQUILHINHA', vencimento: 10},
-                'PR 4112108': {nome: 'JANDAIA DO SUL', vencimento: 25},
-                'PR 4113700': {nome: 'LONDRINA', vencimento: 20},
-                'RS 4313508': {nome: 'OSÓRIO', vencimento: 25},
-                'SP 3544251': {nome: 'ROSANA', vencimento: 25},
-                'PR 4100707': {nome: 'ALTO PIQUIRI', vencimento: 30},
-                'RS 4300802': {nome: 'ANTÔNIO PRADO', vencimento: 30},
-                'PR 4101606': {nome: 'ARAPOTI', vencimento: 30},
-                'SP 3503901': {nome: 'ARUJÁ', vencimento: 30},
-                'PR 4105409': {nome: 'CHOPINZINHO', vencimento: 30},
-                'RS 4305504': {nome: 'CIRÍACO', vencimento: 30},
-                'RS 4306403': {nome: 'DOIS IRMÃOS', vencimento: 30},
-                'RS 4307906': {nome: 'FARROUPILHA', vencimento: 30},
-                'PR 4108700': {nome: 'GRANDES RIOS', vencimento: 30},
-                'RS 4309407': {nome: 'GUAPORÉ', vencimento: 30},
-                'RS 4310207': {nome: 'IJUÍ', vencimento: 30},
-                'RS 4310462': {nome: 'IPIRANGA DO SUL', vencimento: 30},
-                'RS 4310553': {nome: 'ITACURUBI', vencimento: 30},
-                'PR 4111209': {nome: 'ITAPEJARA D\'OESTE', vencimento: 30},
-                'PR 4112207': {nome: 'JANIÓPOLIS', vencimento: 30},
-                'PR 4115309': {nome: 'MARIÓPOLIS', vencimento: 30},
-                'PR 4115457': {nome: 'MARQUINHO', vencimento: 30},
-                'RS 4310702': {nome: 'ITATIBA DO SUL', vencimento: 30},
-                'SC 4212601': {nome: 'PERITIBA', vencimento: 30},
-                'SC 4212809': {nome: 'BALNEÁRIO PIÇARRAS', vencimento: 30},
-                'PR 4120101': {nome: 'PORTO AMAZONAS', vencimento: 30},
-                'PR 4120606': {nome: 'PRUDENTÓPOLIS', vencimento: 30},
-                'PR 4121307': {nome: 'RANCHO ALEGRE', vencimento: 30},
-                'RS 4315800': {nome: 'ROCA SALES', vencimento: 30},
-                'PR 4122404': {nome: 'ROLÂNDIA', vencimento: 30},
-                'RS 4316303': {nome: 'ROQUE GONZALES', vencimento: 30},
-                'SC 4215653': {nome: 'SANTA ROSA DO SUL', vencimento: 30},
-                'PR 4127403': {nome: 'TERRA ROXA', vencimento: 30},
-                'PR 4128203': {nome: 'UNIÃO DA VITÓRIA', vencimento: 30},
-                'RS 4322707': {nome: 'VERA CRUZ', vencimento: 30},
-                'RS 4323754': {nome: 'VITÓRIA DAS MISSÕES', vencimento: 30},
-                'RS 4323804': {nome: 'XANGRI-LÁ', vencimento: 15},
-                'SC 4219705': {nome: 'XAXIM', vencimento: 30},
-                'PR 4100400': {nome: 'Almirante Tamandaré', vencimento: 10},
-                'PR 4101051': {nome: 'Anahy', vencimento: 10},
-                'PR 4103040': {nome: 'BOA VENTURA DE SÃO ROQUE', vencimento: 10},
-                'PR 4103354': {nome: 'Braganey', vencimento: 20},
-                'PR 4103453': {nome: 'Cafelândia', vencimento: 10},
-                'PR 4104253': {nome: 'Campo Magro', vencimento: 10},
-                'PR 4105201': {nome: 'CERRO AZUL', vencimento: 10},
-                'PR 4105300': {nome: 'Céu Azul', vencimento: 10},
-                'PR 4106308': {nome: 'Corbélia', vencimento: 15},
-                'PR 4107157': {nome: 'Diamante D\'Oeste', vencimento: 30},
-                'PR 4110052': {nome: 'Iguatu', vencimento: 10},
-                'PR 4111258': {nome: 'Itaperuçu', vencimento: 10},
-                'PR 4115739': {nome: 'Mato Rico', vencimento: 10},
-                'PR 4115804': {nome: 'Medianeira', vencimento: 10},
-                'PR 4116703': {nome: 'Nova Aurora', vencimento: 10},
-                'PR 4117453': {nome: 'Ouro Verde do Oeste', vencimento: 20},
-                'PR 4121257': {nome: 'Ramilândia', vencimento: 10},
-                'SC 4215307': {nome: 'SALETE', vencimento: 10},
-                'PR 4124020': {nome: 'Santa Tereza do Oeste', vencimento: 10},
-                'PR 4124053': {nome: 'Santa Terezinha de Itaipu', vencimento: 10},
-                'PR 4125407': {nome: 'São José da Boa Vista', vencimento: 10},
-                'PR 4125704': {nome: 'São Miguel do Iguaçu', vencimento: 10},
-                'PR 4125753': {nome: 'São Pedro do Iguaçu', vencimento: 10},
-                'PR 4127957': {nome: 'Tupãssi', vencimento: 5},
-                'PR 4128005': {nome: 'Ubiratã', vencimento: 10},
-                'PR 4128500': {nome: 'Wenceslau Braz', vencimento: 10}
+                {
+  // ========== PRAZO 5 DIAS ========== (29 registros)
+  'PR 4100459': {nome: 'ALTAMIRA DO PARANÁ', vencimento: 5},
+  'MG 3106200': {nome: 'BELO HORIZONTE', vencimento: 5},
+  'RS 4302055': {nome: 'BENJAMIN CONSTANT DO SUL', vencimento: 5},
+  'SC 4202537': {nome: 'BOM JESUS', vencimento: 5},
+  'RS 4302907': {nome: 'CACEQUI', vencimento: 5},
+  'PR 4104428': {nome: 'CANDÓI', vencimento: 5},
+  'RS 4305439': {nome: 'CHUÍ', vencimento: 5},
+  'RS 4306379': {nome: 'DILERMANDO DE AGUIAR', vencimento: 5},
+  'RS 4306601': {nome: 'DOM PEDRITO', vencimento: 5},
+  'RS 4306908': {nome: 'ENCRUZILHADA DO SUL', vencimento: 5},
+  'RS 4307203': {nome: 'ERVAL GRANDE', vencimento: 5},
+  'RS 4308250': {nome: 'FLORIANO PEIXOTO', vencimento: 5},
+  'SC 4205506': {nome: 'FRAIBURGO', vencimento: 5},
+  'RS 4309001': {nome: 'GIRUÁ', vencimento: 5},
+  'RS 4309050': {nome: 'GLORINHA', vencimento: 5},
+  'PR 4110003': {nome: 'IGUARAÇU', vencimento: 5},
+  'RS 4310900': {nome: 'JACUTINGA', vencimento: 5},
+  'MG 3136702': {nome: 'JUIZ DE FORA', vencimento: 5},
+  'SC 4209409': {nome: 'LAGUNA', vencimento: 5},
+  'RS 4311502': {nome: 'LAVRAS DO SUL', vencimento: 5},
+  'RJ 3303302': {nome: 'NITERÓI', vencimento: 5},
+  'RS 4314506': {nome: 'PINHEIRO MACHADO', vencimento: 5},
+  'RS 4314803': {nome: 'PORTÃO', vencimento: 5},
+  'PR 4122008': {nome: 'RIO AZUL', vencimento: 5},
+  'PR 4122503': {nome: 'RONCADOR', vencimento: 5},
+  'RS 4316402': {nome: 'ROSÁRIO DO SUL', vencimento: 5},
+  'RS 4319703': {nome: 'SÃO VALENTIM', vencimento: 5},
+  'RS 4320552': {nome: 'SERTÃO SANTANA', vencimento: 5},
+  'RS 4321600': {nome: 'TRAMANDAÍ', vencimento: 5},
+  'RS 4323002': {nome: 'VIAMÃO', vencimento: 5},
+
+  // ========== PRAZO 10 DIAS ========== (187 registros)
+  'SC 4200051': {nome: 'ABDON BATISTA', vencimento: 10},
+  'SC 4200606': {nome: 'ÁGUAS MORNAS', vencimento: 10},
+  'PR 4100301': {nome: 'AGUDOS DO SUL', vencimento: 10},
+  'RS 4300406': {nome: 'ALEGRETE', vencimento: 10},
+  'RS 4300604': {nome: 'ALVORADA', vencimento: 10},
+  'MS 5000609': {nome: 'AMAMBAÍ', vencimento: 10},
+  'PR 4100905': {nome: 'AMAPORÃ', vencimento: 10},
+  'RS 4300646': {nome: 'AMETISTA DO SUL', vencimento: 10},
+  'SC 4201000': {nome: 'ANITA GARIBALDI', vencimento: 10},
+  'MS 5000906': {nome: 'ANTÔNIO JOÃO', vencimento: 10},
+  'PR 4101408': {nome: 'APUCARANA', vencimento: 10},
+  'SC 4201307': {nome: 'ARAQUARI', vencimento: 10},
+  'RS 4300877': {nome: 'ARARICÁ', vencimento: 10},
+  'RS 4301305': {nome: 'ARROIO GRANDE', vencimento: 10},
+  'RS 4301602': {nome: 'BAGÉ', vencimento: 10},
+  'SC 4202057': {nome: 'BALNEÁRIO BARRA DO SUL', vencimento: 10},
+  'SC 4202008': {nome: 'BALNEÁRIO CAMBORIÚ', vencimento: 10},
+  'PR 4102307': {nome: 'BALSA NOVA', vencimento: 10},
+  'MG 3144805': {nome: 'NOVA LIMA', vencimento: 10},
+  'SC 4202404': {nome: 'BLUMENAU', vencimento: 10},
+  'SC 4202800': {nome: 'BRAÇO DO NORTE', vencimento: 10},
+  'SC 4202909': {nome: 'BRUSQUE', vencimento: 10},
+  'RS 4303103': {nome: 'CACHOEIRINHA', vencimento: 10},
+  'PR 4103479': {nome: 'CAFEZAL DO SUL', vencimento: 10},
+  'PR 4103503': {nome: 'CALIFÓRNIA', vencimento: 10},
+  'RS 4303509': {nome: 'CAMAQUÃ', vencimento: 10},
+  'PR 4103800': {nome: 'CAMBIRA', vencimento: 10},
+  'SC 4203204': {nome: 'CAMBORIÚ', vencimento: 10},
+  'SC 4203402': {nome: 'CAMPO BELO DO SUL', vencimento: 10},
+  'RS 4303905': {nome: 'CAMPO BOM', vencimento: 10},
+  'PR 4104055': {nome: 'CAMPO BONITO', vencimento: 10},
+  'SC 4203253': {nome: 'CAPÃO ALTO', vencimento: 10},
+  'RS 4304622': {nome: 'CAPÃO BONITO DO SUL', vencimento: 10},
+  'SC 4203956': {nome: 'CAPIVARI DE BAIXO', vencimento: 10},
+  'RS 4304713': {nome: 'CARAÁ', vencimento: 10},
+  'RS 4304903': {nome: 'CASCA', vencimento: 10},
+  'RS 4305207': {nome: 'CERRO LARGO', vencimento: 10},
+  'SC 4204251': {nome: 'COCAL DO SUL', vencimento: 10},
+  'RS 4305587': {nome: 'COLINAS', vencimento: 10},
+  'PR 4105805': {nome: 'COLOMBO', vencimento: 10},
+  'PR 4106209': {nome: 'CONTENDA', vencimento: 10},
+  'SC 4204350': {nome: 'CORDILHEIRA ALTA', vencimento: 10},
+  'RS 4305934': {nome: 'CORONEL PILAR', vencimento: 10},
+  'RS 4306130': {nome: 'CRUZALTENSE', vencimento: 10},
+  'MT 5103403': {nome: 'CUIABÁ', vencimento: 10},
+  'PR 4107009': {nome: 'CURIÚVA', vencimento: 10},
+  'RS 4306304': {nome: 'DAVID CANABARRO', vencimento: 10},
+  'MS 5003454': {nome: 'DEODÁPOLIS', vencimento: 10},
+  'RS 4306320': {nome: 'DERRUBADAS', vencimento: 10},
+  'RS 4306353': {nome: 'DEZESSEIS DE NOVEMBRO', vencimento: 10},
+  'PR 4107108': {nome: 'DIAMANTE DO NORTE', vencimento: 10},
+  'MS 5003504': {nome: 'DOURADINA', vencimento: 10},
+  'PR 4107504': {nome: 'ENGENHEIRO BELTRÃO', vencimento: 10},
+  'RS 4306932': {nome: 'ENTRE-IJUÍS', vencimento: 10},
+  'RS 4306973': {nome: 'EREBANGO', vencimento: 10},
+  'RS 4307609': {nome: 'ESTÂNCIA VELHA', vencimento: 10},
+  'RS 4307708': {nome: 'ESTEIO', vencimento: 10},
+  'MS 5003801': {nome: 'FÁTIMA DO SUL', vencimento: 10},
+  'PR 4107702': {nome: 'FÊNIX', vencimento: 10},
+  'PR 4107900': {nome: 'FLORESTA', vencimento: 10},
+  'SC 4205456': {nome: 'FORQUILHINHA', vencimento: 10},
+  'PR 4108320': {nome: 'FRANCISCO ALVES', vencimento: 10},
+  'RS 4308607': {nome: 'GARIBALDI', vencimento: 10},
+  'PR 4108502': {nome: 'GENERAL CARNEIRO', vencimento: 10},
+  'GO 5208707': {nome: 'GOIÂNIA', vencimento: 10},
+  'SC 4206009': {nome: 'GOVERNADOR CELSO RAMOS', vencimento: 10},
+  'RS 4309258': {nome: 'GUABIJU', vencimento: 10},
+  'PR 4108809': {nome: 'GUAÍRA', vencimento: 10},
+  'RS 4309506': {nome: 'GUARANI DAS MISSÕES', vencimento: 10},
+  'PR 4109302': {nome: 'GUARANIAÇU', vencimento: 10},
+  'RS 4307104': {nome: 'HERVAL', vencimento: 10},
+  'RS 4309951': {nome: 'IBIRAPUITÃ', vencimento: 10},
+  'SC 4207007': {nome: 'IÇARA', vencimento: 10},
+  'MS 5004304': {nome: 'IGUATEMI', vencimento: 10},
+  'SC 4207304': {nome: 'IMBITUBA', vencimento: 10},
+  'PR 4110102': {nome: 'IMBITUVA', vencimento: 10},
+  'RS 4310363': {nome: 'IMIGRANTE', vencimento: 10},
+  'PR 4110508': {nome: 'IPIRANGA', vencimento: 10},
+  'SC 4207650': {nome: 'IPORÃ DO OESTE', vencimento: 10},
+  'PR 4110805': {nome: 'IRETAMA', vencimento: 10},
+  'SC 4208203': {nome: 'ITAJAÍ', vencimento: 10},
+  'SC 4208302': {nome: 'ITAPEMA', vencimento: 10},
+  'MS 5004502': {nome: 'ITAPORÃ', vencimento: 10},
+  'RS 4310603': {nome: 'ITAQUI', vencimento: 10},
+  'PR 4111506': {nome: 'IVAIPORÃ', vencimento: 10},
+  'PR 4112009': {nome: 'JAGUARIAÍVA', vencimento: 10},
+  'PR 4113007': {nome: 'JUSSARA', vencimento: 10},
+  'SC 4209300': {nome: 'LAGES', vencimento: 10},
+  'SC 4209458': {nome: 'LAJEADO GRANDE', vencimento: 10},
+  'SC 4209805': {nome: 'LEOBERTO LEAL', vencimento: 10},
+  'PR 4113403': {nome: 'LEÓPOLIS', vencimento: 10},
+  'SC 4210001': {nome: 'LUIZ ALVES', vencimento: 10},
+  'RS 4311718': {nome: 'MAÇAMBARÁ', vencimento: 10},
+  'SC 4210209': {nome: 'MAJOR GERCINO', vencimento: 10},
+  'PR 4113908': {nome: 'MALLET', vencimento: 10},
+  'PR 4114302': {nome: 'MANDIRITUBA', vencimento: 10},
+  'MS 5005400': {nome: 'MARACAJU', vencimento: 10},
+  'PR 4114906': {nome: 'MARILÂNDIA DO SUL', vencimento: 10},
+  'SC 4210605': {nome: 'MASSARANDUBA', vencimento: 10},
+  'RS 4312138': {nome: 'MATO CASTELHANO', vencimento: 30}, // Nota: Aqui o prazo é 30, mas está na seção de 10 dias
+  'SC 4210803': {nome: 'MELEIRO', vencimento: 10},
+  'RS 4312401': {nome: 'MONTENEGRO', vencimento: 10},
+  'MG 3143302': {nome: 'MONTES CLAROS', vencimento: 10},
+  'SC 4211256': {nome: 'MORRO GRANDE', vencimento: 10},
+  'RS 4312476': {nome: 'MORRO REUTER', vencimento: 10},
+  'SC 4211306': {nome: 'NAVEGANTES', vencimento: 10},
+  'MS 5005806': {nome: 'NIOAQUE', vencimento: 10},
+  'PR 4116802': {nome: 'NOVA CANTU', vencimento: 10},
+  'SC 4211405': {nome: 'NOVA ERECHIM', vencimento: 10},
+  'RS 4313060': {nome: 'NOVA HARTZ', vencimento: 10},
+  'PR 4117057': {nome: 'NOVA LARANJEIRAS', vencimento: 10},
+  'PR 4117107': {nome: 'NOVA LONDRINA', vencimento: 10},
+  'PR 4117222': {nome: 'NOVA SANTA ROSA', vencimento: 10},
+  'PR 4117271': {nome: 'NOVA TEBAS', vencimento: 10},
+  'SC 4211504': {nome: 'NOVA TRENTO', vencimento: 10},
+  'SC 4211603': {nome: 'NOVA VENEZA', vencimento: 10},
+  'PR 4117305': {nome: 'ORTIGUEIRA', vencimento: 10},
+  'SC 4211850': {nome: 'OURO VERDE', vencimento: 10},
+  'SC 4211892': {nome: 'PAINEL', vencimento: 10},
+  'PR 4117701': {nome: 'PALMEIRA', vencimento: 10},
+  'RS 4313706': {nome: 'PALMEIRA DAS MISSÕES', vencimento: 10},
+  'PR 4117800': {nome: 'PALMITAL', vencimento: 10},
+  'MS 5006309': {nome: 'PARANAÍBA', vencimento: 10},
+  'RS 4314035': {nome: 'PARECI NOVO', vencimento: 10},
+  'RS 4314050': {nome: 'PAROBÉ', vencimento: 10},
+  'MG 3147907': {nome: 'PASSOS', vencimento: 10},
+  'RS 4314159': {nome: 'PAVERAMA', vencimento: 10},
+  'SC 4212403': {nome: 'PEDRAS GRANDES', vencimento: 10},
+  'RS 4314407': {nome: 'PELOTAS', vencimento: 10},
+  'SC 4212650': {nome: 'PESCARIA BRAVA', vencimento: 10},
+  'PR 4119400': {nome: 'PIRAÍ DO SUL', vencimento: 10},
+  'SC 4213104': {nome: 'PIRATUBA', vencimento: 10},
+  'PR 4119608': {nome: 'PITANGA', vencimento: 10},
+  'RS 4314704': {nome: 'PLANALTO', vencimento: 10},
+  'RS 4314779': {nome: 'PONTÃO', vencimento: 10},
+  'RS 4314902': {nome: 'PORTO ALEGRE', vencimento: 10},
+  'SC 4213500': {nome: 'PORTO BELO', vencimento: 10},
+  'SP 3541406': {nome: 'PRESIDENTE PRUDENTE', vencimento: 10},
+  'PR 4121109': {nome: 'QUINTA DO SOL', vencimento: 10},
+  'RS 4315354': {nome: 'QUINZE DE NOVEMBRO', vencimento: 10},
+  'SC 4214300': {nome: 'RANCHO QUEIMADO', vencimento: 10},
+  'PR 4121505': {nome: 'REBOUÇAS', vencimento: 10},
+  'PR 4121703': {nome: 'RESERVA', vencimento: 10},
+  'RJ 3304557': {nome: 'RIO DE JANEIRO', vencimento: 10},
+  'RS 4315958': {nome: 'ROLADOR', vencimento: 10},
+  'PR 4122701': {nome: 'SABÁUDIA', vencimento: 10},
+  'RS 4316501': {nome: 'SALVADOR DO SUL', vencimento: 10},
+  'RS 4316733': {nome: 'SANTA CECÍLIA DO SUL', vencimento: 10},
+  'PR 4123857': {nome: 'SANTA MARIA DO OESTE', vencimento: 10},
+  'RS 4316956': {nome: 'SANTA MARIA DO HERVAL', vencimento: 10},
+  'SC 4215604': {nome: 'SANTA ROSA DE LIMA', vencimento: 10},
+  'RS 4317004': {nome: 'SANTANA DA BOA VISTA', vencimento: 10},
+  'RS 4317400': {nome: 'SANTIAGO', vencimento: 10},
+  'SC 4215703': {nome: 'SANTO AMARO DA IMPERATRIZ', vencimento: 10},
+  'RS 4317509': {nome: 'SANTO ÂNGELO', vencimento: 10},
+  'RS 4317608': {nome: 'SANTO ANTÔNIO DA PATRULHA', vencimento: 10},
+  'RS 4317558': {nome: 'SANTO ANTÔNIO DO PALMA', vencimento: 10},
+  'RS 4318051': {nome: 'SÃO DOMINGOS DO SUL', vencimento: 10},
+  'SC 4216206': {nome: 'SÃO FRANCISCO DO SUL', vencimento: 10},
+  'PR 4125100': {nome: 'SÃO JOÃO DO TRIUNFO', vencimento: 10},
+  'SC 4216503': {nome: 'SÃO JOAQUIM', vencimento: 10},
+  'SC 4216602': {nome: 'SÃO JOSÉ', vencimento: 10},
+  'SC 4216800': {nome: 'SÃO JOSÉ DO CERRITO', vencimento: 10},
+  'RS 4318622': {nome: 'SÃO JOSÉ DOS AUSENTES', vencimento: 10},
+  'SC 4216909': {nome: 'SÃO LOURENÇO DO OESTE', vencimento: 10},
+  'RS 4318903': {nome: 'SÃO LUIZ GONZAGA', vencimento: 10},
+  'RS 4319158': {nome: 'SÃO MIGUEL DAS MISSÕES', vencimento: 10},
+  'SC 4217204': {nome: 'SÃO MIGUEL DO OESTE', vencimento: 10},
+  'SP 3550308': {nome: 'SÃO PAULO', vencimento: 10},
+  'RS 4319372': {nome: 'SÃO PEDRO DO BUTIÁ', vencimento: 10},
+  'PR 4125803': {nome: 'SÃO PEDRO DO IVAÍ', vencimento: 10},
+  'MG 3164704': {nome: 'SÃO SEBASTIÃO DO PARAÍSO', vencimento: 10},
+  'PR 4126207': {nome: 'SAPOPEMA', vencimento: 10},
+  'SC 4217303': {nome: 'SAUDADES', vencimento: 10},
+  'RS 4320305': {nome: 'SELBACH', vencimento: 10},
+  'SC 4217600': {nome: 'SIDERÓPOLIS', vencimento: 10},
+  'MT 5107909': {nome: 'SINOP', vencimento: 10},
+  'MS 5007976': {nome: 'TAQUARUSSU', vencimento: 10},
+  'PR 4127007': {nome: 'TEIXEIRA SOARES', vencimento: 10},
+  'PR 4127106': {nome: 'TELÊMACO BORBA', vencimento: 10},
+  'RS 4321402': {nome: 'TENENTE PORTELA', vencimento: 10},
+  'SP 3554300': {nome: 'TEODORO SAMPAIO', vencimento: 10},
+  'SC 4218004': {nome: 'TIJUCAS', vencimento: 10},
+  'PR 4127601': {nome: 'TIJUCAS DO SUL', vencimento: 10},
+  'SC 4218400': {nome: 'TREZE DE MAIO', vencimento: 10},
+  'SC 4218509': {nome: 'TREZE TÍLIAS', vencimento: 10},
+  'SC 4218707': {nome: 'TUBARÃO', vencimento: 10},
+  'RS 4322327': {nome: 'TURUÇU', vencimento: 10},
+  'SC 4218806': {nome: 'TURVO', vencimento: 10},
+  'PR 4127965': {nome: 'TURVO', vencimento: 10},
+  'RS 4322350': {nome: 'UNIÃO DA SERRA', vencimento: 10},
+  'GO 5221601': {nome: 'URUAÇU', vencimento: 10},
+  'SC 4219150': {nome: 'VARGEM', vencimento: 10},
+  'RJ 3306305': {nome: 'VOLTA REDONDA', vencimento: 10},
+  'SC 4219853': {nome: 'ZORTÉA', vencimento: 10},
+
+  // ========== PRAZO 15 DIAS ========== (111 registros)
+  'RS 4300034': {nome: 'ACEGUÁ', vencimento: 15},
+  'SC 4200200': {nome: 'AGROLÂNDIA', vencimento: 15},
+  'MS 5000203': {nome: 'ÁGUA CLARA', vencimento: 15},
+  'SC 4200408': {nome: 'ÁGUA DOCE', vencimento: 15},
+  'SC 4200507': {nome: 'ÁGUAS DE CHAPECÓ', vencimento: 15},
+  'RS 4300505': {nome: 'ALPESTRE', vencimento: 15},
+  'SC 4200754': {nome: 'ALTO BELA VISTA', vencimento: 15},
+  'RS 4300570': {nome: 'ALTO FELIZ', vencimento: 15},
+  'SC 4200903': {nome: 'ANGELINA', vencimento: 15},
+  'PR 4101150': {nome: 'ÃNGULO', vencimento: 15},
+  'RS 4300901': {nome: 'ARATIBA', vencimento: 15},
+  'SC 4201653': {nome: 'ARVOREDO', vencimento: 15},
+  'RS 4301651': {nome: 'BARÃO', vencimento: 15},
+  'RS 4301701': {nome: 'BARÃO DE COTEGIPE', vencimento: 15},
+  'RS 4301750': {nome: 'BARÃO DO TRIUNFO', vencimento: 15},
+  'SC 4202107': {nome: 'BARRA VELHA', vencimento: 15},
+  'PR 4102901': {nome: 'BITURUNA', vencimento: 15},
+  'RS 4302154': {nome: 'BOA VISTA DAS MISSÕES', vencimento: 15},
+  'RS 4302352': {nome: 'BOM PRINCÍPIO', vencimento: 15},
+  'PR 4103206': {nome: 'BOM SUCESSO', vencimento: 15},
+  'RS 4302501': {nome: 'BOSSOROCA', vencimento: 15},
+  'RS 4302659': {nome: 'BROCHIER', vencimento: 15},
+  'RS 4303608': {nome: 'CAMBARÁ DO SUL', vencimento: 15},
+  'PR 4103909': {nome: 'CAMPINA DA LAGOA', vencimento: 15},
+  'PR 4103958': {nome: 'CAMPINA DO SIMÃO', vencimento: 15},
+  'SC 4203303': {nome: 'CAMPO ALEGRE', vencimento: 15},
+  'MS 5002704': {nome: 'CAMPO GRANDE', vencimento: 15},
+  'PR 4104303': {nome: 'CAMPO MOURÃO', vencimento: 15},
+  'SC 4203600': {nome: 'CAMPOS NOVOS', vencimento: 15},
+  'RS 4304358': {nome: 'CANDIOTA', vencimento: 15},
+  'SC 4203709': {nome: 'CANELINHA', vencimento: 15},
+  'RS 4304606': {nome: 'CANOAS', vencimento: 15},
+  'RS 4304630': {nome: 'CAPÃO DA CANOA', vencimento: 15},
+  'RS 4304689': {nome: 'CAPELA DE SANTANA', vencimento: 15},
+  'SC 4203907': {nome: 'CAPINZAL', vencimento: 15},
+  'RS 4304671': {nome: 'CAPIVARI DO SUL', vencimento: 15},
+  'RS 4304804': {nome: 'CARLOS BARBOSA', vencimento: 15},
+  'PR 4104808': {nome: 'CASCAVEL', vencimento: 15},
+  'RS 4305108': {nome: 'CAXIAS DO SUL', vencimento: 15},
+  'SC 4204152': {nome: 'CELSO RAMOS', vencimento: 15},
+  'RS 4305157': {nome: 'CERRO GRANDE', vencimento: 15},
+  'RS 4305173': {nome: 'CERRO GRANDE DO SUL', vencimento: 15},
+  'SC 4204194': {nome: 'CHAPADÃO DO LAGEADO', vencimento: 15},
+  'RS 4305355': {nome: 'CHARQUEADAS', vencimento: 15},
+  'RS 4305371': {nome: 'CHARRUA', vencimento: 15},
+  'RS 4305447': {nome: 'CHUVISCA', vencimento: 15},
+  'SC 4204301': {nome: 'CONCÓRDIA', vencimento: 15},
+  'PR 4106001': {nome: 'CONGONHINHAS', vencimento: 15},
+  'MS 5003207': {nome: 'CORUMBÁ', vencimento: 15},
+  'SC 4204509': {nome: 'CORUPÁ', vencimento: 15},
+  'RS 4305975': {nome: 'COXILHA', vencimento: 15},
+  'SC 4204608': {nome: 'CRICIÚMA', vencimento: 15},
+  'PR 4106803': {nome: 'CRUZ MACHADO', vencimento: 15},
+  'SC 4204756': {nome: 'CUNHATAI', vencimento: 15},
+  'SC 4204806': {nome: 'CURITIBANOS', vencimento: 15},
+  'RS 4306452': {nome: 'DOIS LAJEADOS', vencimento: 15},
+  'RS 4306957': {nome: 'ENTRE RIOS DO SUL', vencimento: 15},
+  'RS 4307302': {nome: 'ERVAL SECO', vencimento: 15},
+  'SC 4205209': {nome: 'ERVAL VELHO', vencimento: 15},
+  'RS 4307559': {nome: 'ESTAÇÃO', vencimento: 15},
+  'RS 4307864': {nome: 'FAGUNDES VARELA', vencimento: 15},
+  'PR 4107603': {nome: 'FAXINAL', vencimento: 15},
+  'SC 4205308': {nome: 'FAXINAL DOS GUEDES', vencimento: 15},
+  'RS 4308052': {nome: 'FAXINALZINHO', vencimento: 15},
+  'PR 4107652': {nome: 'FAZENDA RIO GRANDE', vencimento: 15},
+  'PR 4107751': {nome: 'FIGUEIRA', vencimento: 15},
+  'RS 4308201': {nome: 'FLORES DA CUNHA', vencimento: 15},
+  'SC 4205407': {nome: 'FLORIANÓPOLIS', vencimento: 15},
+  'PR 4108452': {nome: 'FOZ DO JORDÃO', vencimento: 15},
+  'RS 4308508': {nome: 'FREDERICO WESTPHALEN', vencimento: 15},
+  'SC 4205704': {nome: 'GAROPABA', vencimento: 15},
+  'SC 4205803': {nome: 'GARUVA', vencimento: 15},
+  'RS 4308805': {nome: 'GENERAL CÂMARA', vencimento: 15},
+  'RS 4308854': {nome: 'GENTIL', vencimento: 15},
+  'RS 4308904': {nome: 'GETÚLIO VARGAS', vencimento: 15},
+  'RS 4309209': {nome: 'GRAVATAÍ', vencimento: 15},
+  'SC 4206207': {nome: 'GRAVATAL', vencimento: 15},
+  'SC 4206702': {nome: 'HERVAL D\'OESTE', vencimento: 15},
+  'PR 4109658': {nome: 'HONÓRIO SERPA', vencimento: 15},
+  'RS 4309654': {nome: 'HULHA NEGRA', vencimento: 15},
+  'SC 4207205': {nome: 'IMARUÍ', vencimento: 15},
+  'RS 4310330': {nome: 'IMBÉ', vencimento: 15},
+  'SC 4207403': {nome: 'IMBUIA', vencimento: 15},
+  'SC 4207502': {nome: 'INDAIAL', vencimento: 15},
+  'SC 4207601': {nome: 'IPIRA', vencimento: 15},
+  'PR 4110607': {nome: 'IPORÃ', vencimento: 15},
+  'SC 4207684': {nome: 'IPUAÇU', vencimento: 15},
+  'SC 4208005': {nome: 'ITÁ', vencimento: 15},
+  'SC 4208401': {nome: 'ITAPIRANGA', vencimento: 15},
+  'GO 5211206': {nome: 'ITAPURANGA', vencimento: 15},
+  'MS 5004601': {nome: 'ITAQUIRAÍ', vencimento: 15},
+  'MS 5004809': {nome: 'JAPORÃ', vencimento: 15},
+  'RS 4311122': {nome: 'JAQUIRANA', vencimento: 15},
+  'SC 4208906': {nome: 'JARAGUÁ DO SUL', vencimento: 15},
+  'GO 5211909': {nome: 'JATAÍ', vencimento: 15},
+  'SC 4209003': {nome: 'JOAÇABA', vencimento: 15},
+  'SC 4209102': {nome: 'JOINVILLE', vencimento: 15},
+  'MS 5005152': {nome: 'JUTI', vencimento: 15},
+  'SC 4209201': {nome: 'LACERDÓPOLIS', vencimento: 15},
+  'RS 4311304': {nome: 'LAGOA VERMELHA', vencimento: 15},
+  'PR 4113304': {nome: 'LARANJEIRAS DO SUL', vencimento: 15},
+  'RS 4311627': {nome: 'LINDOLFO COLLOR', vencimento: 15},
+  'SC 4210035': {nome: 'LUZERNA', vencimento: 15},
+  'RS 4311700': {nome: 'MACHADINHO', vencimento: 15},
+  'SC 4210100': {nome: 'MAFRA', vencimento: 15},
+  'PR 4114500': {nome: 'MANOEL RIBAS', vencimento: 15},
+  'PR 4114609': {nome: 'MARECHAL CÂNDIDO RONDON', vencimento: 15},
+  'RS 4311981': {nome: 'MARIANA PIMENTEL', vencimento: 15},
+  'RS 4312500': {nome: 'MOSTARDAS', vencimento: 15},
+  'RS 4312609': {nome: 'MUÇUM', vencimento: 15},
+  'RS 4312617': {nome: 'MUITOS CAPÕES', vencimento: 15},
+  'RS 4312807': {nome: 'NOVA ARAÇÁ', vencimento: 15},
+  'RS 4312906': {nome: 'NOVA BASSANO', vencimento: 15},
+  'RS 4313201': {nome: 'NOVA PETRÓPOLIS', vencimento: 15},
+  'RS 4313300': {nome: 'NOVA PRATA', vencimento: 15},
+  'RS 4313359': {nome: 'NOVA ROMA DO SUL', vencimento: 15},
+  'RS 4313375': {nome: 'NOVA SANTA RITA', vencimento: 15},
+  'SC 4211751': {nome: 'OTACÍLIO COSTA', vencimento: 15},
+  'SC 4211876': {nome: 'PAIAL', vencimento: 15},
+  'PR 4117503': {nome: 'PAIÇANDU', vencimento: 15},
+  'SC 4211892': {nome: 'PAINEL', vencimento: 10}, // Nota: Anteriormente estava como 15, corrigido para 10
+  'PR 4117602': {nome: 'PALMAS', vencimento: 15},
+  'PR 4118204': {nome: 'PARANAGUÁ', vencimento: 15},
+  'RS 4314100': {nome: 'PASSO FUNDO', vencimento: 15},
+  'RS 4314134': {nome: 'PAULO BENTO', vencimento: 15},
+  'SC 4212304': {nome: 'PAULO LOPES', vencimento: 15},
+  'RS 4314159': {nome: 'PAVERAMA', vencimento: 10}, // Nota: Anteriormente estava como 15, corrigido para 10
+  'SC 4212403': {nome: 'PEDRAS GRANDES', vencimento: 10}, // Nota: Anteriormente estava como 15, corrigido para 10
+  'RS 4314308': {nome: 'PEJUÇARA', vencimento: 15},
+  'SC 4212700': {nome: 'PETROLÂNDIA', vencimento: 15},
+  'RS 4314423': {nome: 'PICADA CAFÉ', vencimento: 15},
+  'RS 4314605': {nome: 'PIRATINI', vencimento: 15},
+  'SC 4213153': {nome: 'PLANALTO ALEGRE', vencimento: 15},
+  'RS 4314753': {nome: 'POÇO DAS ANTAS', vencimento: 15},
+  'SC 4213203': {nome: 'POMERODE', vencimento: 15},
+  'PR 4119905': {nome: 'PONTA GROSSA', vencimento: 15},
+  'SC 4213302': {nome: 'PONTE ALTA', vencimento: 15},
+  'RO 1100205': {nome: 'PORTO VELHO', vencimento: 15},
+  'RS 4315313': {nome: 'QUATRO IRMÃOS', vencimento: 15},
+  'RS 4315305': {nome: 'QUARAÍ', vencimento: 15},
+  'PR 4122156': {nome: 'RIO BONITO DO IGUAÇU', vencimento: 15},
+  'SC 4214805': {nome: 'RIO DO SUL', vencimento: 15},
+  'RS 4315602': {nome: 'RIO GRANDE', vencimento: 15},
+  'RS 4315701': {nome: 'RIO PARDO', vencimento: 15},
+  'RS 4316808': {nome: 'SANTA CRUZ DO SUL', vencimento: 15},
+  'PR 4123907': {nome: 'SANTA MARIANA', vencimento: 15},
+  'RS 4317202': {nome: 'SANTA ROSA', vencimento: 15},
+  'RS 4317251': {nome: 'SANTA TEREZA', vencimento: 15},
+  'SC 4215901': {nome: 'SÃO BONIFÁCIO', vencimento: 15},
+  'SC 4216107': {nome: 'SÃO DOMINGOS', vencimento: 15},
+  'RS 4318309': {nome: 'SÃO GABRIEL', vencimento: 15},
+  'MS 5007695': {nome: 'SÃO GABRIEL DO OESTE', vencimento: 15},
+  'RS 4318408': {nome: 'SÃO JERÔNIMO', vencimento: 15},
+  'SC 4216305': {nome: 'SÃO JOÃO BATISTA', vencimento: 15},
+  'RS 4318440': {nome: 'SÃO JORGE', vencimento: 15},
+  'RS 4318606': {nome: 'SÃO JOSÉ DO OURO', vencimento: 15},
+  'RS 4318614': {nome: 'SÃO JOSÉ DO SUL', vencimento: 15},
+  'RS 4318705': {nome: 'SÃO LEOPOLDO', vencimento: 15},
+  'RS 4318804': {nome: 'SÃO LOURENÇO DO SUL', vencimento: 15},
+  'RS 4319307': {nome: 'SÃO PAULO DAS MISSÕES', vencimento: 15},
+  'RS 4319356': {nome: 'SÃO PEDRO DA SERRA', vencimento: 15},
+  'SC 4217253': {nome: 'SÃO PEDRO DE ALCÂNTARA', vencimento: 15},
+  'RS 4319505': {nome: 'SÃO SEBASTIÃO DO CAÍ', vencimento: 15},
+  'RS 4319604': {nome: 'SÃO SEPÉ', vencimento: 15},
+  'RS 4319752': {nome: 'SÃO VENDELINO', vencimento: 15},
+  'PR 4126256': {nome: 'SARANDI', vencimento: 15},
+  'SC 4217501': {nome: 'SEARA', vencimento: 15},
+  'RS 4320206': {nome: 'SEBERI', vencimento: 15},
+  'PR 4126504': {nome: 'SERTANÓPOLIS', vencimento: 15},
+  'RS 4320503': {nome: 'SERTÃO', vencimento: 15},
+  'RS 4320602': {nome: 'SEVERIANO DE ALMEIDA', vencimento: 15},
+  'PR 4126801': {nome: 'TAPEJARA', vencimento: 15},
+  'RS 4320909': {nome: 'TAPEJARA', vencimento: 15},
+  'RS 4321006': {nome: 'TAPERA', vencimento: 15},
+  'SC 4218202': {nome: 'TIMBÓ', vencimento: 15},
+  'PR 4127700': {nome: 'TOLEDO', vencimento: 15},
+  'MS 5008305': {nome: 'TRÊS LAGOAS', vencimento: 15},
+  'SC 4218400': {nome: 'TREZE DE MAIO', vencimento: 10}, // Nota: Anteriormente estava como 15, corrigido para 10
+  'SC 4218509': {nome: 'TREZE TÍLIAS', vencimento: 10}, // Nota: Anteriormente estava como 15, corrigido para 10
+  'RS 4322525': {nome: 'VALE VERDE', vencimento: 15},
+  'SC 4219176': {nome: 'VARGEM BONITA', vencimento: 15},
+  'PR 4128534': {nome: 'VENTANIA', vencimento: 15},
+  'RS 4322806': {nome: 'VERANÓPOLIS', vencimento: 15},
+  'RS 4322855': {nome: 'VESPASIANO CORRÊA', vencimento: 15},
+  'MS 5008404': {nome: 'VICENTINA', vencimento: 15},
+  'SC 4219200': {nome: 'VIDAL RAMOS', vencimento: 15},
+  'RS 4323309': {nome: 'VILA FLORES', vencimento: 15},
+  'RS 4323358': {nome: 'VILA LÂNGARO', vencimento: 15},
+  'RS 4323408': {nome: 'VILA MARIA', vencimento: 15},
+  'RS 4323507': {nome: 'VISTA ALEGRE', vencimento: 15},
+  'RS 4323606': {nome: 'VISTA ALEGRE DO PRATA', vencimento: 15},
+  'SC 4219606': {nome: 'XAVANTINA', vencimento: 15},
+  'RS 4323804': {nome: 'XANGRI-LÁ', vencimento: 15},
+
+  // ========== PRAZO 20 DIAS ========== (45 registros)
+  'SC 4200101': {nome: 'ABELARDO LUZ', vencimento: 20},
+  'RS 4300059': {nome: 'ÁGUA SANTA', vencimento: 20},
+  'MS 5000708': {nome: 'ANASTÁCIO', vencimento: 20},
+  'SC 4201208': {nome: 'ANTÔNIO CARLOS', vencimento: 20},
+  'MS 5001102': {nome: 'AQUIDAUANA', vencimento: 20},
+  'PR 4101507': {nome: 'ARAPONGAS', vencimento: 20},
+  'SC 4201406': {nome: 'ARARANGUÁ', vencimento: 20},
+  'PR 4101804': {nome: 'ARAUCÁRIA', vencimento: 20},
+  'PR 4101853': {nome: 'ARIRANHA DO IVAÍ', vencimento: 20},
+  'SC 4201505': {nome: 'ARMAZÉM', vencimento: 20},
+  'RS 4301925': {nome: 'BARRA DO RIO AZUL', vencimento: 20},
+  'PR 4102604': {nome: 'BARRACÃO', vencimento: 20},
+  'RS 4301800': {nome: 'BARRACÃO', vencimento: 20},
+  'RS 4302105': {nome: 'BENTO GONÇALVES', vencimento: 20},
+  'SC 4202305': {nome: 'BIGUAÇU', vencimento: 20},
+  'RS 4302253': {nome: 'BOA VISTA DO SUL', vencimento: 20},
+  'DF 5300108': {nome: 'BRASÍLIA', vencimento: 20},
+  'MS 5002407': {nome: 'CAARAPÓ', vencimento: 20},
+  'RS 4302808': {nome: 'CAÇAPAVA DO SUL', vencimento: 20},
+  'RS 4303004': {nome: 'CACHOEIRA DO SUL', vencimento: 20},
+  'PR 4103701': {nome: 'CAMBÉ', vencimento: 20},
+  'RS 4303673': {nome: 'CAMPESTRE DA SERRA', vencimento: 20},
+  'RS 4303806': {nome: 'CAMPINAS DO SUL', vencimento: 20},
+  'PR 4104105': {nome: 'CAMPO DO TENENTE', vencimento: 20},
+  'RS 4304507': {nome: 'CANGUÇU', vencimento: 20},
+  'SC 4203808': {nome: 'CANOINHAS', vencimento: 20},
+  'RS 4304663': {nome: 'CAPÃO DO LEÃO', vencimento: 20},
+  'RS 4304705': {nome: 'CARAZINHO', vencimento: 20},
+  'SC 4204202': {nome: 'CHAPECÓ', vencimento: 20},
+  'PR 4105508': {nome: 'CIANORTE', vencimento: 20},
+  'PR 4105706': {nome: 'CLEVELÂNDIA', vencimento: 20},
+  'PR 4106506': {nome: 'CORONEL VIVIDA', vencimento: 20},
+  'SC 4204558': {nome: 'CORREIA PINTO', vencimento: 20},
+  'RS 4305959': {nome: 'COTIPORÃ', vencimento: 20},
+  'RS 4306056': {nome: 'CRISTAL', vencimento: 20},
+  'PR 4106605': {nome: 'CRUZEIRO DO OESTE', vencimento: 20},
+  'PR 4106902': {nome: 'CURITIBA', vencimento: 20},
+  'PR 4107207': {nome: 'DOIS VIZINHOS', vencimento: 20},
+  'MS 5003702': {nome: 'DOURADOS', vencimento: 20},
+  'PR 4107306': {nome: 'DOUTOR CAMARGO', vencimento: 20},
+  'MS 5003751': {nome: 'ELDORADO', vencimento: 20},
+  'RS 4307005': {nome: 'ERECHIM', vencimento: 20},
+  'RS 4307807': {nome: 'ESTRELA', vencimento: 20},
+  'RS 4308102': {nome: 'FELIZ', vencimento: 20},
+  'PR 4108106': {nome: 'FLORIDA', vencimento: 20},
+  'SC 4205902': {nome: 'GASPAR', vencimento: 20},
+  'MS 5004007': {nome: 'GLÓRIA DE DOURADOS', vencimento: 20},
+  'SC 4206306': {nome: 'GUABIRUBA', vencimento: 20},
+  'RS 4309308': {nome: 'GUAÍBA', vencimento: 20},
+  'SC 4206504': {nome: 'GUARAMIRIM', vencimento: 20},
+  'PR 4109401': {nome: 'GUARAPUAVA', vencimento: 20},
+  'PR 4109609': {nome: 'GUARATUBA', vencimento: 20},
+  'SC 4206652': {nome: 'GUATAMBÚ', vencimento: 20},
+  'PR 4109708': {nome: 'IBAITI', vencimento: 20},
+  'PR 4109807': {nome: 'IBIPORÃ', vencimento: 20},
+  'SC 4207106': {nome: 'ILHOTA', vencimento: 20},
+  'PR 4110201': {nome: 'INÁCIO MARTINS', vencimento: 20},
+  'RS 4310504': {nome: 'IRAI', vencimento: 20},
+  'PR 4110706': {nome: 'IRATI', vencimento: 20},
+  'SC 4208500': {nome: 'ITUPORANGA', vencimento: 20},
+  'MS 5004700': {nome: 'IVINHEMA', vencimento: 20},
+  'RS 4310801': {nome: 'IVOTI', vencimento: 20},
+  'RS 4311007': {nome: 'JAGUARÃO', vencimento: 20},
+  'PR 4113205': {nome: 'LAPA', vencimento: 20},
+  'PR 4113502': {nome: 'LOANDA', vencimento: 20},
+  'PR 4113601': {nome: 'LOBATO', vencimento: 20},
+  'PR 4113700': {nome: 'LONDRINA', vencimento: 20},
+  'PR 4114005': {nome: 'MAMBORÊ', vencimento: 20},
+  'PR 4114203': {nome: 'MANDAGUARI', vencimento: 20},
+  'RS 4311809': {nome: 'MARAU', vencimento: 20},
+  'PR 4115200': {nome: 'MARINGÁ', vencimento: 20},
+  'RS 4312351': {nome: 'MONTAURI', vencimento: 20},
+  'RS 4312385': {nome: 'MONTE BELO DO SUL', vencimento: 20},
+  'MS 5005681': {nome: 'MUNDO NOVO', vencimento: 20},
+  'MS 5005707': {nome: 'NAVIRAÍ', vencimento: 20},
+  'MS 5006002': {nome: 'NOVA ALVORADA DO SUL', vencimento: 20},
+  'MS 5006200': {nome: 'NOVA ANDRADINA', vencimento: 20},
+  'SC 4211900': {nome: 'PALHOÇA', vencimento: 20},
+  'SC 4212056': {nome: 'PALMEIRA', vencimento: 20},
+  'RS 4313904': {nome: 'PANAMBI', vencimento: 20},
+  'RS 4314001': {nome: 'PARAÍ', vencimento: 20},
+  'PR 4118105': {nome: 'PARANACITY', vencimento: 20},
+  'PR 4118402': {nome: 'PARANAVAÍ', vencimento: 20},
+  'PR 4118501': {nome: 'PATO BRANCO', vencimento: 20},
+  'PR 4118808': {nome: 'PEABIRU', vencimento: 20},
+  'PR 4118857': {nome: 'PEROBAL', vencimento: 20},
+  'PR 4119152': {nome: 'PINHAIS', vencimento: 20},
+  'SC 4212908': {nome: 'PINHALZINHO', vencimento: 20},
+  'PR 4119301': {nome: 'PINHÃO', vencimento: 20},
+  'RS 4314548': {nome: 'PINTO BANDEIRA', vencimento: 20},
+  'PR 4119707': {nome: 'PLANALTINA DO PARANÁ', vencimento: 20},
+  'PR 4120903': {nome: 'QUEDAS DO IGUAÇU', vencimento: 20},
+  'PR 4121752': {nome: 'RESERVA DO IGUAÇU', vencimento: 20},
+  'RS 4315503': {nome: 'RESTINGA SÊCA', vencimento: 20},
+  'MS 5007109': {nome: 'RIBAS DO RIO PARDO', vencimento: 20},
+  'MS 5007208': {nome: 'RIO BRILHANTE', vencimento: 20},
+  'SC 4214904': {nome: 'RIO FORTUNA', vencimento: 20},
+  'RS 4316907': {nome: 'SANTA MARIA', vencimento: 20},
+  'RS 4317301': {nome: 'SANTA VITÓRIA DO PALMAR', vencimento: 20},
+  'SC 4215802': {nome: 'SÃO BENTO DO SUL', vencimento: 20},
+  'RS 4318002': {nome: 'SÃO BORJA', vencimento: 20},
+  'SC 4216008': {nome: 'SÃO CARLOS', vencimento: 20},
+  'RS 4318200': {nome: 'SÃO FRANCISCO DE PAULA', vencimento: 20},
+  'PR 4124806': {nome: 'SÃO JOÃO', vencimento: 20},
+  'PR 4124905': {nome: 'SÃO JOÃO DO CAIUÁ', vencimento: 20},
+  'PR 4125209': {nome: 'SÃO JORGE D\'OESTE', vencimento: 20},
+  'PR 4125506': {nome: 'SÃO JOSÉ DOS PINHAIS', vencimento: 20},
+  'SC 4217105': {nome: 'SÃO MARTINHO', vencimento: 20},
+  'PR 4125605': {nome: 'SÃO MATEUS DO SUL', vencimento: 20},
+  'RS 4319901': {nome: 'SAPIRANGA', vencimento: 20},
+  'RS 4320008': {nome: 'SAPUCAIA DO SUL', vencimento: 20},
+  'PR 4126272': {nome: 'SAUDADE DO IGUAÇU', vencimento: 20},
+  'RS 4320404': {nome: 'SERAFINA CORRÊA', vencimento: 20},
+  'PR 4126405': {nome: 'SERTANEJA', vencimento: 20},
+  'PR 4126652': {nome: 'SULINA', vencimento: 20},
+  'RS 4321204': {nome: 'TAQUARA', vencimento: 20},
+  'PR 4127205': {nome: 'TERRA BOA', vencimento: 20},
+  'RS 4321451': {nome: 'TEUTÔNIA', vencimento: 20},
+  'PR 4127502': {nome: 'TIBAGI', vencimento: 20},
+  'SC 4218103': {nome: 'TIMBÉ DO SUL', vencimento: 20},
+  'RS 4322004': {nome: 'TRIUNFO', vencimento: 20},
+  'PR 4127908': {nome: 'TUNEIRAS DO OESTE', vencimento: 20},
+  'PR 4128104': {nome: 'UMUARAMA', vencimento: 20},
+  'RS 4322400': {nome: 'URUGUAIANA', vencimento: 20},
+  'RS 4322509': {nome: 'VACARIA', vencimento: 20},
+  'RS 4323770': {nome: 'WESTFÁLIA', vencimento: 20},
+  'SC 4219507': {nome: 'XANXERÊ', vencimento: 20},
+
+  // ========== PRAZO 25 DIAS ========== (5 registros)
+  'SP 3502101': {nome: 'ANDRADINA', vencimento: 25},
+  'SP 3504008': {nome: 'ASSIS', vencimento: 25},
+  'MS 5002001': {nome: 'BATAYPORÃ', vencimento: 25},
+  'SP 3510005': {nome: 'CÂNDIDO MOTA', vencimento: 25},
+  'RS 4306767': {nome: 'ELDORADO DO SUL', vencimento: 25},
+
+  // ========== PRAZO 30 DIAS ========== (12 registros)
+  'PR 4100707': {nome: 'ALTO PIQUIRI', vencimento: 30},
+  'RS 4300802': {nome: 'ANTÔNIO PRADO', vencimento: 30},
+  'PR 4101606': {nome: 'ARAPOTI', vencimento: 30},
+  'SP 3503901': {nome: 'ARUJÁ', vencimento: 30},
+  'PR 4105409': {nome: 'CHOPINZINHO', vencimento: 30},
+  'RS 4305504': {nome: 'CIRÍACO', vencimento: 30},
+  'RS 4306403': {nome: 'DOIS IRMÃOS', vencimento: 30},
+  'RS 4307906': {nome: 'FARROUPILHA', vencimento: 30},
+  'PR 4108700': {nome: 'GRANDES RIOS', vencimento: 30},
+  'RS 4309407': {nome: 'GUAPORÉ', vencimento: 30},
+  'RS 4310207': {nome: 'IJUÍ', vencimento: 30},
+  'RS 4310462': {nome: 'IPIRANGA DO SUL', vencimento: 30},
+  'RS 4310553': {nome: 'ITACURUBI', vencimento: 30},
+  'PR 4111209': {nome: 'ITAPEJARA D\'OESTE', vencimento: 30},
+  'PR 4112207': {nome: 'JANIÓPOLIS', vencimento: 30},
+  'PR 4115309': {nome: 'MARIÓPOLIS', vencimento: 30},
+  'PR 4115457': {nome: 'MARQUINHO', vencimento: 30},
+  'RS 4310702': {nome: 'ITATIBA DO SUL', vencimento: 30},
+  'SC 4212601': {nome: 'PERITIBA', vencimento: 30},
+  'SC 4212809': {nome: 'BALNEÁRIO PIÇARRAS', vencimento: 30},
+  'PR 4120101': {nome: 'PORTO AMAZONAS', vencimento: 30},
+  'PR 4120606': {nome: 'PRUDENTÓPOLIS', vencimento: 30},
+  'PR 4121307': {nome: 'RANCHO ALEGRE', vencimento: 30},
+  'RS 4315800': {nome: 'ROCA SALES', vencimento: 30},
+  'PR 4122404': {nome: 'ROLÂNDIA', vencimento: 30},
+  'RS 4316303': {nome: 'ROQUE GONZALES', vencimento: 30},
+  'SC 4215653': {nome: 'SANTA ROSA DO SUL', vencimento: 30},
+  'PR 4127403': {nome: 'TERRA ROXA', vencimento: 30},
+  'PR 4128203': {nome: 'UNIÃO DA VITÓRIA', vencimento: 30},
+  'RS 4322707': {nome: 'VERA CRUZ', vencimento: 30},
+  'RS 4323754': {nome: 'VITÓRIA DAS MISSÕES', vencimento: 30},
+  'SC 4219705': {nome: 'XAXIM', vencimento: 30},
+
+  // ========== SEM PRAZO DEFINIDO ========== (19 registros)
+  'PR 4101051': {nome: 'ANAHY', vencimento: null},
+  'PR 4103040': {nome: 'BOA VENTURA DE SÃO ROQUE', vencimento: null},
+  'PR 4103453': {nome: 'CAFELÂNDIA', vencimento: null},
+  'PR 4105201': {nome: 'CERRO AZUL', vencimento: null},
+  'PR 4105300': {nome: 'CÉU AZUL', vencimento: null},
+  'PR 4110052': {nome: 'IGUATU', vencimento: null},
+  'PR 4111258': {nome: 'ITAPERUÇU', vencimento: null},
+  'PR 4115739': {nome: 'MATO RICO', vencimento: null},
+  'PR 4115804': {nome: 'MEDIANEIRA', vencimento: null},
+  'PR 4121257': {nome: 'RAMILÂNDIA', vencimento: null},
+  'SC 4215307': {nome: 'SALETE', vencimento: null},
+  'PR 4124020': {nome: 'SANTA TEREZA DO OESTE', vencimento: null},
+  'PR 4124053': {nome: 'SANTA TEREZINHA DE ITAIPU', vencimento: null},
+  'PR 4125407': {nome: 'SÃO JOSÉ DA BOA VISTA', vencimento: null},
+  'PR 4125704': {nome: 'SÃO MIGUEL DO IGUAÇU', vencimento: null},
+  'PR 4125753': {nome: 'SÃO PEDRO DO IGUAÇU', vencimento: null},
+  'PR 4128005': {nome: 'UBIRATÃ', vencimento: null},
+  'PR 4128559': {nome: 'VERA CRUZ DO OESTE', vencimento: null},
+  'PR 4128500': {nome: 'WENCESLAU BRAZ', vencimento: null}
+}
             };
 
-            // 1. SELEÇÃO DE EMPRESA - CORRIGIDO
+            // 1. SELEÇÃO DE EMPRESA
             const companyCards = document.querySelectorAll('.company-card');
             companyCards.forEach(card => {
                 card.addEventListener('click', function() {
@@ -1166,7 +1758,7 @@ analise meu site
                 });
             });
 
-            // 2. SELEÇÃO DE ARQUIVO - CORRIGIDO
+            // 2. SELEÇÃO DE ARQUIVO
             document.getElementById('selectFileBtn').addEventListener('click', function() {
                 document.getElementById('excelFile').click();
             });
@@ -1201,7 +1793,7 @@ analise meu site
                 processExcel(selectedFile, selectedCompany);
             });
 
-            // 4. FUNÇÃO PRINCIPAL DE PROCESSAMENTO - ATUALIZADA
+            // 4. FUNÇÃO PRINCIPAL DE PROCESSAMENTO
             function processExcel(file, company) {
                 const reader = new FileReader();
                 
@@ -1263,6 +1855,7 @@ analise meu site
                         setFileInfo(`Arquivo processado com sucesso! ${processedData.length} registros importados.`, 'success');
                         
                         updateUIAfterImport();
+                        saveDataToStorage();
                         
                         exportExcelBtn.disabled = false;
                         exportPDFBtn.disabled = false;
@@ -1321,6 +1914,9 @@ analise meu site
                 updateAccumulatedData();
                 updatePaymentReminders();
                 updateCalendar();
+                if (document.getElementById('graphs-tab').classList.contains('active')) {
+                    updateCharts();
+                }
             }
             
             function checkPendingPayments() {
@@ -1464,6 +2060,9 @@ analise meu site
                 updateTable();
                 updateSummary();
                 updateAccumulatedData();
+                if (document.getElementById('graphs-tab').classList.contains('active')) {
+                    updateCharts();
+                }
             }
 
             function updateTable() {
@@ -2109,6 +2708,7 @@ analise meu site
                 }
                 
                 updateUIAfterImport();
+                saveDataToStorage();
                 closeEditModal();
             }
             
@@ -2127,10 +2727,255 @@ analise meu site
                     );
                     
                     updateUIAfterImport();
+                    saveDataToStorage();
                 }
             }
 
-            // 9. OUTROS EVENT LISTENERS
+            // 9. PERSISTÊNCIA DE DADOS
+            const DATA_KEY = 'fiscalData';
+
+            function loadDataFromStorage() {
+                showGlobalLoading('Carregando dados...');
+                try {
+                    const savedData = localStorage.getItem(DATA_KEY);
+                    if (savedData) {
+                        importedData = JSON.parse(savedData);
+                        updateUIAfterImport();
+                        setFileInfo('Dados carregados com sucesso!', 'success');
+                    }
+                } catch (error) {
+                    console.error("Erro ao carregar dados:", error);
+                    setFileInfo('Erro ao carregar dados salvos', 'error');
+                } finally {
+                    hideGlobalLoading();
+                }
+            }
+
+            function saveDataToStorage() {
+                showGlobalLoading('Salvando dados...');
+                try {
+                    localStorage.setItem(DATA_KEY, JSON.stringify(importedData));
+                    setFileInfo('Dados salvos com sucesso!', 'success');
+                } catch (error) {
+                    console.error("Erro ao salvar dados:", error);
+                    setFileInfo('Erro ao salvar dados', 'error');
+                } finally {
+                    hideGlobalLoading();
+                }
+            }
+
+            // 10. NOTIFICAÇÕES POR E-MAIL (SIMULADO)
+            function sendEmailReminders() {
+                showGlobalLoading('Preparando lembretes...');
+                
+                setTimeout(() => {
+                    const reminders = getPendingReminders();
+                    const emailContent = generateEmailContent(reminders);
+                    
+                    hideGlobalLoading();
+                    
+                    // Simular envio de e-mail mostrando o conteúdo em uma nova janela
+                    const emailWindow = window.open('', '_blank');
+                    emailWindow.document.write(`
+                        <html>
+                        <head><title>Lembretes de Pagamento</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; padding: 20px; }
+                            .reminder { margin-bottom: 20px; padding: 10px; border-left: 4px solid; }
+                            .pending { border-color: #e74c3c; background: #fae8e8; }
+                            .proximo { border-color: #f39c12; background: #fef9e7; }
+                            .pago { border-color: #27ae60; background: #e8f8f0; }
+                        </style>
+                        </head>
+                        <body>
+                            <h1>Lembretes de Pagamento Fiscal</h1>
+                            <p>Segue a lista de pagamentos pendentes e próximos do vencimento:</p>
+                            ${emailContent}
+                            <p>Você pode copiar este conteúdo e enviar manualmente por e-mail.</p>
+                        </body>
+                        </html>
+                    `);
+                    
+                    alert('Conteúdo dos lembretes aberto em nova janela. Copie e envie manualmente por e-mail.');
+                }, 1000);
+            }
+
+            function getPendingReminders() {
+                const now = new Date();
+                const nextWeek = new Date();
+                nextWeek.setDate(nextWeek.getDate() + 7);
+                
+                // Agrupar por empresa e status
+                const reminders = importedData.reduce((acc, item) => {
+                    const key = `${item.empresa}-${item.status}`;
+                    if (!acc[key]) {
+                        acc[key] = {
+                            empresa: item.empresa,
+                            status: item.status,
+                            count: 0,
+                            total: 0,
+                            items: []
+                        };
+                    }
+                    acc[key].count++;
+                    acc[key].total += item.valorISS;
+                    acc[key].items.push(item);
+                    return acc;
+                }, {});
+                
+                // Filtrar apenas pendentes e próximos
+                return Object.values(reminders).filter(r => 
+                    r.status === 'pendente' || r.status === 'proximo'
+                );
+            }
+
+            function generateEmailContent(reminders) {
+                return reminders.map(reminder => {
+                    const statusClass = reminder.status === 'pago' ? 'pago' : 
+                                      reminder.status === 'proximo' ? 'proximo' : 'pending';
+                    const statusText = reminder.status === 'pago' ? 'Pago' : 
+                                     reminder.status === 'proximo' ? 'Próximo do vencimento' : 'Pendente';
+                    
+                    return `
+                        <div class="reminder ${statusClass}">
+                            <h3>${reminder.empresa} - ${formatCurrency(reminder.total)}</h3>
+                            <p><strong>Status:</strong> ${statusText}</p>
+                            <p><strong>Itens:</strong> ${reminder.count}</p>
+                            ${reminder.items.slice(0, 3).map(item => `
+                                <p>${item.municipio} - Vencimento: ${item.vencimento} (${formatCurrency(item.valorISS)})</p>
+                            `).join('')}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // 11. GRÁFICOS
+            function initCharts() {
+                const ctx1 = document.getElementById('mainChart').getContext('2d');
+                const ctx2 = document.getElementById('secondaryChart').getContext('2d');
+                
+                mainChart = new Chart(ctx1, {
+                    type: 'bar',
+                    data: { labels: [], datasets: [] },
+                    options: getChartOptions('Gráfico Principal')
+                });
+                
+                secondaryChart = new Chart(ctx2, {
+                    type: 'pie',
+                    data: { labels: [], datasets: [] },
+                    options: getChartOptions('Visão Detalhada')
+                });
+                
+                updateCharts();
+            }
+
+            function getChartOptions(title) {
+                return {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { 
+                            display: true, 
+                            text: title,
+                            font: { size: 16 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    if (context.parsed.y !== undefined) {
+                                        label += formatCurrency(context.parsed.y);
+                                    } else {
+                                        label += formatCurrency(context.raw);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                };
+            }
+
+            function updateCharts() {
+                showGlobalLoading('Atualizando gráficos...');
+                
+                setTimeout(() => {
+                    try {
+                        const graphType = document.getElementById('graphType').value;
+                        const metric = document.getElementById('graphMetric').value;
+                        const groupBy = document.getElementById('graphGroupBy').value;
+                        
+                        // Dados para o gráfico principal
+                        const mainData = prepareChartData(metric, groupBy);
+                        
+                        // Atualizar gráfico principal
+                        mainChart.data.labels = mainData.labels;
+                        mainChart.data.datasets = [{
+                            label: metric === 'count' ? 'Quantidade' : metric === 'valorISS' ? 'Valor ISS' : 'Base de Cálculo',
+                            data: mainData.values,
+                            backgroundColor: generateColors(mainData.labels.length),
+                            borderColor: '#2c3e50',
+                            borderWidth: 1
+                        }];
+                        mainChart.type = graphType;
+                        mainChart.update();
+                        
+                        // Dados para o gráfico secundário (agrupamento alternativo)
+                        const secondaryGroupBy = groupBy === 'empresa' ? 'municipio' : 'empresa';
+                        const secondaryData = prepareChartData(metric, secondaryGroupBy);
+                        
+                        // Atualizar gráfico secundário
+                        secondaryChart.data.labels = secondaryData.labels;
+                        secondaryChart.data.datasets = [{
+                            label: metric === 'count' ? 'Quantidade' : metric === 'valorISS' ? 'Valor ISS' : 'Base de Cálculo',
+                            data: secondaryData.values,
+                            backgroundColor: generateColors(secondaryData.labels.length),
+                            borderColor: '#2c3e50',
+                            borderWidth: 1
+                        }];
+                        secondaryChart.update();
+                        
+                    } catch (error) {
+                        console.error("Erro ao atualizar gráficos:", error);
+                    } finally {
+                        hideGlobalLoading();
+                    }
+                }, 500);
+            }
+
+            function prepareChartData(metric, groupBy) {
+                const groups = {};
+                
+                filteredData.forEach(item => {
+                    const key = item[groupBy] || 'Não especificado';
+                    if (!groups[key]) groups[key] = { count: 0, valorISS: 0, baseCalculo: 0 };
+                    
+                    groups[key].count++;
+                    groups[key].valorISS += item.valorISS;
+                    groups[key].baseCalculo += item.baseCalculo;
+                });
+                
+                const labels = Object.keys(groups);
+                const values = labels.map(label => {
+                    return metric === 'count' ? groups[label].count :
+                           metric === 'valorISS' ? groups[label].valorISS :
+                           groups[label].baseCalculo;
+                });
+                
+                return { labels, values };
+            }
+
+            function generateColors(count) {
+                const colors = [];
+                for (let i = 0; i < count; i++) {
+                    const hue = (i * 360 / count) % 360;
+                    colors.push(`hsl(${hue}, 70%, 60%)`);
+                }
+                return colors;
+            }
+
+            // 12. OUTROS EVENT LISTENERS
             resetFiltersBtn.addEventListener('click', function() {
                 filterEmpresa.value = '';
                 filterMunicipio.value = '';
@@ -2145,6 +2990,7 @@ analise meu site
             checkPendingBtn.addEventListener('click', function() {
                 checkPendingPayments();
                 updateUIAfterImport();
+                saveDataToStorage();
                 setFileInfo('Pendências verificadas com sucesso', 'success');
             });
             
@@ -2184,6 +3030,10 @@ analise meu site
                             content.classList.add('active');
                         }
                     });
+                    
+                    if (tabId === 'graphs' && !mainChart) {
+                        initCharts();
+                    }
                 });
             });
             
@@ -2225,7 +3075,13 @@ analise meu site
             
             searchInput.addEventListener('input', filterData);
             
+            // Botões de ação
+            saveDataBtn.addEventListener('click', saveDataToStorage);
+            sendRemindersBtn.addEventListener('click', sendEmailReminders);
+            updateGraphsBtn.addEventListener('click', updateCharts);
+            
             // Inicialização
+            loadDataFromStorage();
             updateCalendar();
         });
         

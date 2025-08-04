@@ -36,6 +36,31 @@
             box-shadow: var(--card-shadow);
         }
         
+        /* Estilos para tabela corrigidos */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            margin-top: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+            word-wrap: break-word;
+            vertical-align: middle;
+        }
+        
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            position: sticky;
+            top: 0;
+            font-weight: 600;
+            text-align: left;
+        }
+        
         /* Estilos para as linhas agrupadas */
         .group-row {
             background-color: #f8f9fa;
@@ -99,6 +124,12 @@
 
         .positive {
             color: var(--success-color);
+        }
+
+        /* Checkbox para seleção em lote */
+        .row-checkbox {
+            margin: 0;
+            cursor: pointer;
         }
 
         /* Restante do seu CSS existente... */
@@ -232,27 +263,7 @@
         .button-group {
             display: flex;
             gap: 10px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        th, td {
-            padding: 14px 16px;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        th {
-            background-color: var(--primary-color);
-            color: white;
-            position: sticky;
-            top: 0;
-            font-weight: 600;
-            text-align: left;
+            flex-wrap: wrap;
         }
         
         tr:hover {
@@ -898,6 +909,9 @@
                 <button id="saveDataBtn" class="success">
                     <i class="fas fa-save"></i> Salvar Dados
                 </button>
+                <button id="deleteBatchBtn" class="danger" disabled>
+                    <i class="fas fa-trash-alt"></i> Excluir Selecionados
+                </button>
             </div>
             
             <div class="payment-reminder">
@@ -918,7 +932,7 @@
             <table id="dataTable">
                 <thead>
                     <tr>
-                        <th></th>
+                        <th width="40px"><input type="checkbox" id="selectAll"></th>
                         <th>Empresa</th>
                         <th>Município/Estado</th>
                         <th>Competência</th>
@@ -1185,6 +1199,8 @@
             const nextMonthBtn = document.getElementById('nextMonthBtn');
             const calendarGrid = document.getElementById('calendarGrid');
             const updateGraphsBtn = document.getElementById('updateGraphsBtn');
+            const deleteBatchBtn = document.getElementById('deleteBatchBtn');
+            const selectAllCheckbox = document.getElementById('selectAll');
             
             // Variáveis de estado
             let selectedCompany = null;
@@ -1197,7 +1213,7 @@
             let mainChart, secondaryChart;
             
             // Mapeamento completo de municípios com códigos e vencimentos
-            let municipiosVencimento = {
+           let municipiosVencimento = {
     'PR 4100459': {nome: 'ALTAMIRA DO PARANÁ', vencimento: 5},
     'MG 3106200': {nome: 'BELO HORIZONTE', vencimento: 5},
     'RS 4302055': {nome: 'BENJAMIN CONSTANT DO SUL', vencimento: 5},
@@ -1848,7 +1864,7 @@
                 processExcel(selectedFile, selectedCompany);
             });
 
-            // 4. FUNÇÃO PRINCIPAL DE PROCESSAMENTO
+            // 4. FUNÇÃO PRINCIPAL DE PROCESSAMENTO (ATUALIZADA)
             function processExcel(file, company) {
                 const reader = new FileReader();
                 
@@ -1880,8 +1896,18 @@
                             let competencia = item.competencia;
                             if (!competencia) competencia = new Date().toLocaleDateString('pt-BR');
                             
-                            // Corrigir status
-                            const status = item.status && item.status.toLowerCase() === 'ponderto' ? 'pendente' : 'pendente';
+                            // CORREÇÃO DO ERRO: Tratamento robusto do status
+                            let status = 'pendente'; // Valor padrão
+                            if (item.status) {
+                                const statusStr = String(item.status).toLowerCase();
+                                if (statusStr === 'ponderto' || statusStr === 'pendeiro') {
+                                    status = 'pendente';
+                                } else if (statusStr === 'pago') {
+                                    status = 'pago';
+                                } else if (statusStr === 'proximo') {
+                                    status = 'proximo';
+                                }
+                            }
                             
                             // Calcular valores
                             const baseCalculo = parseFloat(item.baseCalculo) || 0;
@@ -1897,7 +1923,7 @@
                                 valorISS: valorISS,
                                 aliquota: aliquota,
                                 status: status,
-                                vencimento: calculateDueDate(competencia, item.municipioCodigo),
+                                vencimento: municipioInfo.vencimento.toString(), // Apenas o dia
                                 diaVencimento: municipioInfo.vencimento,
                                 arquivo: file.name,
                                 dataImportacao: new Date().toLocaleString('pt-BR')
@@ -1938,9 +1964,15 @@
                 if (!competencia) return 'A DEFINIR';
                 
                 try {
-                    // Extrair apenas o dia do vencimento do município
+                    // Extrair mês e ano da competência
+                    const [dia, mes, ano] = competencia.split('/');
+                    
+                    // Obter dia do vencimento do município
                     const municipio = municipiosVencimento[municipioCodigo] || {vencimento: 10};
-                    return `${municipio.vencimento}`; // Retorna apenas o dia
+                    const diaVencimento = municipio.vencimento;
+                    
+                    // Retornar APENAS O DIA do vencimento
+                    return diaVencimento.toString();
                 } catch (e) {
                     console.warn("Erro ao calcular vencimento", e);
                     return 'A DEFINIR';
@@ -2159,13 +2191,13 @@
                     mainRow.classList.add('group-row');
                     mainRow.dataset.groupIndex = index;
                     
-                    // Célula com ícone de expansão
-                    const expandCell = mainRow.insertCell();
-                    const expandIcon = document.createElement('i');
-                    expandIcon.className = 'fas fa-chevron-right expand-icon';
-                    expandIcon.style.marginRight = '5px';
-                    expandIcon.style.transition = 'transform 0.3s ease';
-                    expandCell.appendChild(expandIcon);
+                    // Célula com checkbox para seleção em lote
+                    const checkboxCell = mainRow.insertCell();
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'row-checkbox';
+                    checkbox.dataset.groupIndex = index;
+                    checkboxCell.appendChild(checkbox);
                     
                     // Empresa
                     mainRow.insertCell().textContent = group.empresa;
@@ -2232,8 +2264,13 @@
                         detailRow.classList.add('detail-row');
                         detailRow.dataset.groupIndex = index;
                         
-                        // Célula vazia para alinhamento
-                        detailRow.insertCell();
+                        // Célula com checkbox para seleção em lote
+                        const detailCheckboxCell = detailRow.insertCell();
+                        const detailCheckbox = document.createElement('input');
+                        detailCheckbox.type = 'checkbox';
+                        detailCheckbox.className = 'row-checkbox';
+                        detailCheckbox.dataset.index = importedData.indexOf(item);
+                        detailCheckboxCell.appendChild(detailCheckbox);
                         
                         // Empresa
                         detailRow.insertCell().textContent = item.empresa;
@@ -2244,14 +2281,9 @@
                         // Competência detalhada
                         detailRow.insertCell().textContent = item.competencia || '-';
                         
-                        // Vencimento detalhado (completo)
+                        // Vencimento detalhado (apenas o dia)
                         const detailVencimentoCell = detailRow.insertCell();
-                        if (item.vencimento && item.vencimento !== 'A DEFINIR') {
-                            const [day, month, year] = item.competencia.split('/');
-                            detailVencimentoCell.textContent = `${day}/${month}/${year}`;
-                        } else {
-                            detailVencimentoCell.textContent = '-';
-                        }
+                        detailVencimentoCell.textContent = item.vencimento || '-';
                         
                         // Base de Cálculo detalhada
                         const detailBaseCell = detailRow.insertCell();
@@ -2297,6 +2329,8 @@
                     });
                 });
                 
+                // Configurar seleção em lote
+                setupBatchDelete();
                 updatePagination();
             }
 
@@ -2324,6 +2358,71 @@
                         ? 'rotate(90deg)' 
                         : 'rotate(0deg)';
                 }
+            }
+
+            function setupBatchDelete() {
+                const checkboxes = document.querySelectorAll('.row-checkbox');
+                const deleteBtn = document.getElementById('deleteBatchBtn');
+                
+                // Selecionar todos
+                selectAllCheckbox.addEventListener('change', function() {
+                    const isChecked = this.checked;
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = isChecked;
+                    });
+                    deleteBtn.disabled = !isChecked;
+                });
+                
+                // Verificar seleção individual
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        const anyChecked = [...document.querySelectorAll('.row-checkbox:checked')].length > 0;
+                        deleteBtn.disabled = !anyChecked;
+                        
+                        // Atualizar checkbox "Selecionar todos"
+                        if (!this.checked) {
+                            selectAllCheckbox.checked = false;
+                        } else {
+                            const allChecked = [...document.querySelectorAll('.row-checkbox:not(#selectAll)')]
+                                .every(cb => cb.checked);
+                            selectAllCheckbox.checked = allChecked;
+                        }
+                    });
+                });
+
+                deleteBtn.addEventListener('click', function() {
+                    const selectedCheckboxes = [...document.querySelectorAll('.row-checkbox:checked:not(#selectAll)')];
+                    
+                    if (selectedCheckboxes.length > 0) {
+                        if (confirm(`Deseja realmente excluir ${selectedCheckboxes.length} registros?`)) {
+                            showGlobalLoading('Excluindo registros...');
+                            
+                            setTimeout(() => {
+                                // Obter índices dos itens selecionados
+                                const indicesToDelete = selectedCheckboxes.map(checkbox => {
+                                    return checkbox.dataset.index 
+                                        ? parseInt(checkbox.dataset.index) 
+                                        : importedData.findIndex(item => 
+                                            checkbox.dataset.groupIndex 
+                                            && item.municipio === filteredData[checkbox.dataset.groupIndex].municipio
+                                        );
+                                }).filter(index => index !== -1);
+                                
+                                // Remover itens do array importedData
+                                importedData = importedData.filter((_, index) => !indicesToDelete.includes(index));
+                                
+                                // Atualizar interface
+                                updateUIAfterImport();
+                                saveDataToStorage();
+                                hideGlobalLoading();
+                                
+                                // Resetar seleção
+                                selectAllCheckbox.checked = false;
+                                deleteBtn.disabled = true;
+                            }, 500);
+                        }
+                    }
+                });
             }
 
             function updatePagination() {

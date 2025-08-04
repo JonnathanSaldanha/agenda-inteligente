@@ -40,6 +40,7 @@
         .group-row {
             background-color: #f8f9fa;
             font-weight: bold;
+            cursor: pointer;
         }
 
         .group-row.expanded {
@@ -48,10 +49,15 @@
 
         .detail-row {
             background-color: #f8f9fa;
+            display: none;
         }
 
         .detail-row:nth-child(even) {
             background-color: #ffffff;
+        }
+
+        .expanded + .detail-row {
+            display: table-row;
         }
 
         /* Ícone de expansão */
@@ -62,6 +68,37 @@
 
         .expanded .expand-icon {
             transform: rotate(90deg);
+        }
+
+        /* Estilos para números e alinhamento */
+        td {
+            text-align: right;
+        }
+
+        td:first-child {
+            text-align: center;
+        }
+
+        td:nth-child(2), 
+        td:nth-child(3), 
+        td:nth-child(4), 
+        td:nth-child(5) {
+            text-align: left;
+        }
+
+        .aliquota, .negative, .positive {
+            font-weight: bold;
+            display: inline-block;
+            min-width: 1.2em;
+            text-align: right;
+        }
+
+        .negative {
+            color: var(--danger-color);
+        }
+
+        .positive {
+            color: var(--success-color);
         }
 
         /* Restante do seu CSS existente... */
@@ -206,7 +243,6 @@
         
         th, td {
             padding: 14px 16px;
-            text-align: left;
             border-bottom: 1px solid #ddd;
         }
         
@@ -216,22 +252,11 @@
             position: sticky;
             top: 0;
             font-weight: 600;
+            text-align: left;
         }
         
         tr:hover {
             background-color: rgba(52, 152, 219, 0.05);
-        }
-        
-        .aliquota {
-            font-weight: bold;
-        }
-        
-        .positive {
-            color: var(--success-color);
-        }
-        
-        .negative {
-            color: var(--danger-color);
         }
         
         .summary-card {
@@ -1172,7 +1197,7 @@
             let mainChart, secondaryChart;
             
             // Mapeamento completo de municípios com códigos e vencimentos
-           let municipiosVencimento = {
+            let municipiosVencimento = {
     'PR 4100459': {nome: 'ALTAMIRA DO PARANÁ', vencimento: 5},
     'MG 3106200': {nome: 'BELO HORIZONTE', vencimento: 5},
     'RS 4302055': {nome: 'BENJAMIN CONSTANT DO SUL', vencimento: 5},
@@ -1774,8 +1799,7 @@
     'PR 4128005': {nome: 'UBIRATÃ', vencimento: null},
     'PR 4128559': {nome: 'VERA CRUZ DO OESTE', vencimento: null},
     'PR 4128500': {nome: 'WENCESLAU BRAZ', vencimento: null}
-
-            };
+};
 
             // 1. SELEÇÃO DE EMPRESA
             const companyCards = document.querySelectorAll('.company-card');
@@ -2135,12 +2159,13 @@
                     mainRow.classList.add('group-row');
                     mainRow.dataset.groupIndex = index;
                     
-                    // Checkbox
-                    const selectCell = mainRow.insertCell();
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.dataset.index = index;
-                    selectCell.appendChild(checkbox);
+                    // Célula com ícone de expansão
+                    const expandCell = mainRow.insertCell();
+                    const expandIcon = document.createElement('i');
+                    expandIcon.className = 'fas fa-chevron-right expand-icon';
+                    expandIcon.style.marginRight = '5px';
+                    expandIcon.style.transition = 'transform 0.3s ease';
+                    expandCell.appendChild(expandIcon);
                     
                     // Empresa
                     mainRow.insertCell().textContent = group.empresa;
@@ -2171,7 +2196,7 @@
                     aliquotaCell.textContent = calculateAliquota(group.baseCalculo, group.valorISS);
                     aliquotaCell.className = 'aliquota';
                     
-                    // Status (mostra o status mais crítico)
+                    // Status (mostra o status mais crítico do grupo)
                     const statusCell = mainRow.insertCell();
                     const statusBadge = document.createElement('span');
                     
@@ -2192,117 +2217,113 @@
                     const expandButton = document.createElement('button');
                     expandButton.className = 'secondary';
                     expandButton.innerHTML = '<i class="fas fa-eye"></i> Detalhes';
-                    expandButton.onclick = () => toggleGroupDetails(index);
+                    expandButton.onclick = (e) => {
+                        e.stopPropagation();
+                        toggleGroupDetails(index);
+                    };
                     actionsCell.appendChild(expandButton);
                     
-                    // Linhas detalhadas (se expandido)
-                    if (group.expanded) {
-                        group.items.forEach((item, itemIndex) => {
-                            const detailRow = dataTable.insertRow();
-                            detailRow.classList.add('detail-row');
-                            detailRow.dataset.groupIndex = index;
-                            
-                            // Célula vazia para alinhamento
-                            detailRow.insertCell();
-                            
-                            // Empresa
-                            detailRow.insertCell().textContent = item.empresa;
-                            
-                            // Município
-                            detailRow.insertCell().textContent = item.municipio || '-';
-                            
-                            // Competência detalhada
-                            detailRow.insertCell().textContent = item.competencia || '-';
-                            
-                            // Vencimento detalhado (completo)
-                            const detailVencimentoCell = detailRow.insertCell();
-                            if (item.vencimento && item.vencimento !== 'A DEFINIR') {
-                                const [day, month, year] = item.competencia.split('/');
-                                detailVencimentoCell.textContent = `${day}/${month}/${year}`;
-                            } else {
-                                detailVencimentoCell.textContent = '-';
-                            }
-                            
-                            // Base de Cálculo detalhada
-                            const detailBaseCell = detailRow.insertCell();
-                            detailBaseCell.textContent = formatCurrency(item.baseCalculo);
-                            detailBaseCell.className = item.baseCalculo < 0 ? 'negative' : 'positive';
-                            
-                            // Valor ISS detalhado
-                            const detailIssCell = detailRow.insertCell();
-                            detailIssCell.textContent = formatCurrency(item.valorISS);
-                            detailIssCell.className = item.valorISS < 0 ? 'negative' : 'positive';
-                            
-                            // Alíquota detalhada
-                            const detailAliquotaCell = detailRow.insertCell();
-                            detailAliquotaCell.textContent = item.aliquota;
-                            detailAliquotaCell.className = 'aliquota';
-                            
-                            // Status detalhado
-                            const detailStatusCell = detailRow.insertCell();
-                            const detailStatusBadge = document.createElement('span');
-                            detailStatusBadge.className = `status-badge status-${item.status}`;
-                            detailStatusBadge.textContent = item.status === 'pago' ? 'Pago' : 
-                                                          item.status === 'proximo' ? 'Próximo' : 'Pendente';
-                            detailStatusCell.appendChild(detailStatusBadge);
-                            
-                            // Ações detalhadas
-                            const detailActionsCell = detailRow.insertCell();
-                            const detailButtonGroup = document.createElement('div');
-                            detailButtonGroup.className = 'button-group';
-                            
-                            const editBtn = document.createElement('button');
-                            editBtn.className = 'secondary';
-                            editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-                            editBtn.onclick = () => openEditModal(item);
-                            
-                            const deleteBtn = document.createElement('button');
-                            deleteBtn.className = 'danger';
-                            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
-                            deleteBtn.onclick = () => confirmDelete(item);
-                            
-                            detailButtonGroup.appendChild(editBtn);
-                            detailButtonGroup.appendChild(deleteBtn);
-                            detailActionsCell.appendChild(detailButtonGroup);
-                        });
-                    }
+                    // Adicionar evento de clique na linha inteira
+                    mainRow.onclick = () => toggleGroupDetails(index);
+                    
+                    // Linhas detalhadas (inicialmente ocultas)
+                    group.items.forEach((item, itemIndex) => {
+                        const detailRow = dataTable.insertRow();
+                        detailRow.classList.add('detail-row');
+                        detailRow.dataset.groupIndex = index;
+                        
+                        // Célula vazia para alinhamento
+                        detailRow.insertCell();
+                        
+                        // Empresa
+                        detailRow.insertCell().textContent = item.empresa;
+                        
+                        // Município
+                        detailRow.insertCell().textContent = item.municipio || '-';
+                        
+                        // Competência detalhada
+                        detailRow.insertCell().textContent = item.competencia || '-';
+                        
+                        // Vencimento detalhado (completo)
+                        const detailVencimentoCell = detailRow.insertCell();
+                        if (item.vencimento && item.vencimento !== 'A DEFINIR') {
+                            const [day, month, year] = item.competencia.split('/');
+                            detailVencimentoCell.textContent = `${day}/${month}/${year}`;
+                        } else {
+                            detailVencimentoCell.textContent = '-';
+                        }
+                        
+                        // Base de Cálculo detalhada
+                        const detailBaseCell = detailRow.insertCell();
+                        detailBaseCell.textContent = formatCurrency(item.baseCalculo);
+                        detailBaseCell.className = item.baseCalculo < 0 ? 'negative' : 'positive';
+                        
+                        // Valor ISS detalhado
+                        const detailIssCell = detailRow.insertCell();
+                        detailIssCell.textContent = formatCurrency(item.valorISS);
+                        detailIssCell.className = item.valorISS < 0 ? 'negative' : 'positive';
+                        
+                        // Alíquota detalhada
+                        const detailAliquotaCell = detailRow.insertCell();
+                        detailAliquotaCell.textContent = item.aliquota;
+                        detailAliquotaCell.className = 'aliquota';
+                        
+                        // Status detalhado
+                        const detailStatusCell = detailRow.insertCell();
+                        const detailStatusBadge = document.createElement('span');
+                        detailStatusBadge.className = `status-badge status-${item.status}`;
+                        detailStatusBadge.textContent = item.status === 'pago' ? 'Pago' : 
+                                                      item.status === 'proximo' ? 'Próximo' : 'Pendente';
+                        detailStatusCell.appendChild(detailStatusBadge);
+                        
+                        // Ações detalhadas
+                        const detailActionsCell = detailRow.insertCell();
+                        const detailButtonGroup = document.createElement('div');
+                        detailButtonGroup.className = 'button-group';
+                        
+                        const editBtn = document.createElement('button');
+                        editBtn.className = 'secondary';
+                        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+                        editBtn.onclick = () => openEditModal(item);
+                        
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'danger';
+                        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                        deleteBtn.onclick = () => confirmDelete(item);
+                        
+                        detailButtonGroup.appendChild(editBtn);
+                        detailButtonGroup.appendChild(deleteBtn);
+                        detailActionsCell.appendChild(detailButtonGroup);
+                    });
                 });
                 
                 updatePagination();
             }
 
             function toggleGroupDetails(groupIndex) {
-                // Encontrar o grupo correspondente nos dados filtrados
-                const municipios = [...new Set(filteredData.map(item => item.municipio))];
-                const municipio = municipios[groupIndex];
+                // Encontrar todas as linhas do grupo
+                const rows = document.querySelectorAll(`tr[data-group-index="${groupIndex}"]`);
                 
-                // Encontrar o grupo nos dados agrupados
-                const groupedData = filteredData.reduce((acc, item) => {
-                    const key = item.municipio;
-                    if (!acc[key]) {
-                        acc[key] = {
-                            municipio: item.municipio,
-                            empresa: item.empresa,
-                            competencia: item.competencia,
-                            baseCalculo: 0,
-                            valorISS: 0,
-                            items: [],
-                            expanded: false
-                        };
-                    }
-                    acc[key].baseCalculo += item.baseCalculo;
-                    acc[key].valorISS += item.valorISS;
-                    acc[key].items.push(item);
-                    return acc;
-                }, {});
+                if (rows.length === 0) return;
                 
-                // Alternar estado expandido
-                if (groupedData[municipio]) {
-                    groupedData[municipio].expanded = !groupedData[municipio].expanded;
+                // A primeira linha é a linha principal do grupo
+                const mainRow = rows[0];
+                
+                // Alternar classe expanded
+                mainRow.classList.toggle('expanded');
+                
+                // Alternar visibilidade das linhas de detalhe (todas exceto a primeira)
+                for (let i = 1; i < rows.length; i++) {
+                    rows[i].style.display = mainRow.classList.contains('expanded') ? '' : 'none';
                 }
                 
-                // Recarregar a tabela
-                updateTable();
+                // Alternar ícone de expansão
+                const expandIcon = mainRow.querySelector('.expand-icon');
+                if (expandIcon) {
+                    expandIcon.style.transform = mainRow.classList.contains('expanded') 
+                        ? 'rotate(90deg)' 
+                        : 'rotate(0deg)';
+                }
             }
 
             function updatePagination() {

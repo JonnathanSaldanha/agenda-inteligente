@@ -36,20 +36,249 @@
             box-shadow: var(--card-shadow);
         }
         
-        /* Estilos para tabela */
+        h1, h2, h3 {
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            padding-bottom: 15px;
+            font-size: 2.2rem;
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: var(--primary-color);
+        }
+        
+        /* Estilos para abas */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+            font-weight: 500;
+            color: #7f8c8d;
+        }
+        
+        .tab.active {
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .tab:hover:not(.active) {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Seção de upload */
+        .upload-section {
+            background: #e8f4fc;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 2px dashed var(--primary-color);
+            transition: var(--transition);
+        }
+        
+        .upload-section:hover {
+            background: #d4e6f1;
+            transform: translateY(-2px);
+        }
+        
+        .upload-section.highlight {
+            background: #c1d8e8;
+            border-color: var(--primary-dark);
+        }
+        
+        /* Filtros */
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+        }
+        
+        select, input, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: var(--transition);
+            background-color: white;
+        }
+        
+        select:focus, input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        /* Botões */
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        button.secondary {
+            background-color: #7f8c8d;
+        }
+        
+        button.secondary:hover {
+            background-color: #6c7a7d;
+        }
+        
+        button.success {
+            background-color: var(--success-color);
+        }
+        
+        button.success:hover {
+            background-color: #219653;
+        }
+        
+        button.danger {
+            background-color: var(--danger-color);
+        }
+        
+        button.danger:hover {
+            background-color: #c0392b;
+        }
+        
+        button.warning {
+            background-color: var(--warning-color);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        /* Cards de resumo */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .summary-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+        
+        .summary-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .summary-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 5px 0;
+        }
+        
+        .summary-description {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        /* Tabela */
         table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed;
             margin-top: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-size: 0.9rem;
         }
         
         th, td {
             padding: 12px 15px;
-            border-bottom: 1px solid #ddd;
-            word-wrap: break-word;
-            vertical-align: middle;
+            border-bottom: 1px solid #eee;
+            text-align: left;
         }
         
         th {
@@ -58,44 +287,13 @@
             position: sticky;
             top: 0;
             font-weight: 600;
-            text-align: left;
         }
         
-        /* Estilos para as linhas agrupadas */
-        .group-row {
-            background-color: #f8f9fa;
-            font-weight: bold;
-            cursor: pointer;
+        tr:hover {
+            background-color: rgba(52, 152, 219, 0.05);
         }
-
-        .group-row.expanded {
-            background-color: #e8f4fc;
-        }
-
-        .detail-row {
-            background-color: #f8f9fa;
-            display: none;
-        }
-
-        .detail-row:nth-child(even) {
-            background-color: #ffffff;
-        }
-
-        .expanded + .detail-row {
-            display: table-row;
-        }
-
-        /* Ícone de expansão */
-        .expand-icon {
-            margin-right: 5px;
-            transition: transform 0.3s ease;
-        }
-
-        .expanded .expand-icon {
-            transform: rotate(90deg);
-        }
-
-        /* Estilos para números e alinhamento */
+        
+        /* Alinhamento de células */
         td {
             text-align: right;
         }
@@ -125,259 +323,60 @@
         .positive {
             color: var(--success-color);
         }
-
-        /* Checkbox para seleção em lote */
-        .row-checkbox {
-            margin: 0;
-            cursor: pointer;
-        }
-
+        
         /* Status badges */
         .status-badge {
             display: inline-block;
-            padding: 3px 8px;
+            padding: 4px 10px;
             border-radius: 12px;
             font-size: 12px;
             font-weight: 600;
-            color: white;
+            margin-left: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         .status-pago {
-            background-color: var(--success-color);
+            background-color: #27ae60;
+            color: white;
         }
         
         .status-pendente {
-            background-color: var(--danger-color);
+            background-color: #e74c3c;
+            color: white;
         }
         
         .status-proximo {
-            background-color: var(--warning-color);
-        }
-
-        /* Upload section */
-        .upload-section {
-            background: #e8f4fc;
-            padding: 25px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            text-align: center;
-            border: 2px dashed var(--primary-color);
-            transition: var(--transition);
-        }
-
-        .upload-section:hover {
-            background: #d4e6f1;
-        }
-
-        .upload-section.highlight {
-            background: #c1d8e8;
-            border-color: var(--primary-dark);
-        }
-
-        /* File info */
-        #fileInfo {
-            margin-top: 15px;
-            font-style: italic;
-            padding: 10px;
-            border-radius: 4px;
+            background-color: #f39c12;
+            color: white;
         }
         
-        .file-success {
-            background-color: rgba(39, 174, 96, 0.1);
-            color: var(--success-color);
-            border-left: 3px solid var(--success-color);
+        /* Paginação */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 5px;
         }
         
-        .file-error {
-            background-color: rgba(231, 76, 60, 0.1);
-            color: var(--danger-color);
-            border-left: 3px solid var(--danger-color);
+        .pagination button {
+            min-width: 36px;
+            padding: 8px;
+            background-color: white;
+            color: var(--secondary-color);
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
-        .file-info {
-            background-color: rgba(52, 152, 219, 0.1);
-            color: var(--primary-color);
-            border-left: 3px solid var(--primary-color);
-        }
-
-        /* Loading spinner */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Buttons */
-        button {
+        .pagination button.active {
             background-color: var(--primary-color);
             color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        button:hover {
-            background-color: var(--primary-dark);
-            transform: translateY(-2px);
-        }
-        
-        button:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        button.secondary {
-            background-color: #7f8c8d;
-        }
-        
-        button.secondary:hover {
-            background-color: #6c7a7d;
-        }
-        
-        button.success {
-            background-color: var(--success-color);
-        }
-        
-        button.success:hover {
-            background-color: #219653;
-        }
-        
-        button.danger {
-            background-color: var(--danger-color);
-        }
-        
-        button.danger:hover {
-            background-color: #c0392b;
-        }
-        
-        .button-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        /* Filtros */
-        .filters {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .filter-item {
-            flex: 1;
-            min-width: 200px;
-        }
-        
-        .filter-item label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: var(--secondary-color);
-        }
-        
-        .filter-item select,
-        .filter-item input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        .filter-item select:focus,
-        .filter-item input:focus {
-            outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-        }
-
-        /* Cards de resumo */
-        .summary-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
         }
         
-        .summary-card {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: var(--card-shadow);
-        }
-        
-        .summary-title {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: var(--secondary-color);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .summary-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--primary-color);
-        }
-        
-        .summary-description {
-            font-size: 12px;
-            color: #7f8c8d;
-            margin-top: 5px;
-        }
-
-        /* Tabs */
-        .tabs {
-            display: flex;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 20px;
-        }
-        
-        .tab {
-            padding: 10px 20px;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: var(--transition);
-        }
-        
-        .tab.active {
-            border-bottom-color: var(--primary-color);
-            color: var(--primary-color);
-            font-weight: 600;
-        }
-        
-        .tab:hover:not(.active) {
-            background-color: rgba(52, 152, 219, 0.1);
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-
-        /* Modal de edição */
+        /* Modal de Edição */
         .edit-modal {
             display: none;
             position: fixed;
@@ -389,6 +388,7 @@
             z-index: 1000;
             justify-content: center;
             align-items: center;
+            animation: fadeIn 0.3s ease;
         }
         
         .edit-modal-content {
@@ -398,32 +398,26 @@
             width: 90%;
             max-width: 600px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            max-height: 90vh;
+            overflow-y: auto;
         }
         
-        /* Formulário no modal */
-        .form-group {
+        .edit-modal h3 {
+            margin-top: 0;
+            color: var(--secondary-color);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .edit-modal .form-group {
             margin-bottom: 15px;
         }
         
-        .form-group label {
+        .edit-modal label {
             display: block;
             margin-bottom: 5px;
             font-weight: 600;
-        }
-        
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        .form-group textarea {
-            height: 100px;
-            resize: vertical;
+            font-size: 0.9rem;
         }
         
         .modal-actions {
@@ -431,9 +425,11 @@
             justify-content: flex-end;
             gap: 10px;
             margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
         }
-
-        /* Company selection */
+        
+        /* Seção de empresas */
         .company-selection {
             display: flex;
             gap: 15px;
@@ -449,26 +445,23 @@
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            border: 2px solid #3498db;
+            box-shadow: var(--card-shadow);
+            border: 2px solid #e0e0e0;
             min-width: 120px;
+            flex: 1;
         }
         
         .company-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-        }
-        
-        .company-card h3 {
-            margin: 0;
-            color: #2c3e50;
+            border-color: var(--primary-color);
         }
         
         .company-card.selected {
             background-color: #e8f4fc;
-            border-color: #2980b9;
+            border-color: var(--primary-color);
         }
-
+        
         /* Progress bar */
         .progress-bar {
             height: 6px;
@@ -484,8 +477,8 @@
             width: 0;
             transition: width 0.3s ease;
         }
-
-        /* Data accumulated */
+        
+        /* Dados acumulados */
         .data-accumulated {
             margin-top: 30px;
             background: white;
@@ -494,15 +487,14 @@
             box-shadow: var(--card-shadow);
         }
         
-        .data-accumulated h3 {
-            margin-top: 0;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-        }
-        
         .accumulated-item {
             padding: 15px;
             border-bottom: 1px solid #eee;
+            transition: background-color 0.2s ease;
+        }
+        
+        .accumulated-item:hover {
+            background-color: #f8f9fa;
         }
         
         .accumulated-item:last-child {
@@ -519,18 +511,22 @@
         .accumulated-content {
             margin-top: 10px;
             display: none;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
         }
         
         .accumulated-item.active .accumulated-content {
             display: block;
+            animation: fadeIn 0.3s ease;
         }
-
-        /* Payment reminder */
+        
+        /* Lembretes de pagamento */
         .payment-reminder {
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: var(--card-shadow);
             margin-top: 30px;
         }
         
@@ -546,6 +542,12 @@
             border-radius: 8px;
             border-left: 4px solid;
             background: #f8f9fa;
+            transition: transform 0.3s ease;
+        }
+        
+        .reminder-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         
         .reminder-card.pendente {
@@ -564,6 +566,7 @@
             margin: 0 0 10px 0;
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }
         
         .reminder-card .valor {
@@ -583,17 +586,100 @@
             border-top: 1px solid #eee;
         }
         
-        .reminder-card .proximos-vencimentos ul {
-            margin: 5px 0 0 0;
-            padding-left: 20px;
+        /* Calendário */
+        #calendarContainer {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
         }
         
-        .reminder-card button.small {
-            margin-top: 10px;
-            padding: 5px 10px;
-            font-size: 12px;
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
-
+        
+        #currentMonthYear {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--secondary-color);
+        }
+        
+        #calendarGrid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        
+        .calendar-day-header {
+            font-weight: bold;
+            text-align: center;
+            padding: 8px;
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+        }
+        
+        .calendar-day {
+            min-height: 80px;
+            padding: 5px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            position: relative;
+        }
+        
+        .calendar-day-number {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .calendar-day.today {
+            border: 2px solid var(--primary-color);
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+        
+        .calendar-event {
+            font-size: 0.7rem;
+            padding: 2px 4px;
+            margin-bottom: 2px;
+            border-radius: 3px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .calendar-event.pago {
+            background-color: #e8f8f0;
+            color: #27ae60;
+        }
+        
+        .calendar-event.pendente {
+            background-color: #fae8e8;
+            color: #e74c3c;
+        }
+        
+        .calendar-event.proximo {
+            background-color: #fef9e7;
+            color: #f39c12;
+        }
+        
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
         /* Global Loading */
         .global-loading {
             position: fixed;
@@ -614,24 +700,26 @@
             border-radius: 10px;
             text-align: center;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            max-width: 300px;
         }
         
         .loading-spinner {
             border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
+            border-top: 5px solid var(--primary-color);
             border-radius: 50%;
             width: 50px;
             height: 50px;
             animation: spin 1s linear infinite;
             margin: 0 auto 15px;
         }
-
+        
         /* Gráficos */
         .graph-filters {
             display: flex;
             gap: 15px;
             margin-bottom: 20px;
             flex-wrap: wrap;
+            align-items: flex-end;
         }
         
         .graphs-container {
@@ -648,55 +736,272 @@
             box-shadow: var(--card-shadow);
         }
         
-        @media (min-width: 1200px) {
-            .graphs-container {
-                grid-template-columns: 1fr 1fr;
-            }
+        /* Modal de Detalhes */
+        .detail-modal {
+            display: none;
+            position: fixed;
+            z-index: 1050;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
         }
-        
+
+        .detail-modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-detail-modal {
+            position: absolute;
+            right: 20px;
+            top: 10px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+        }
+
+        .close-detail-modal:hover {
+            color: #333;
+        }
+
+        /* Panel Styles */
+        .detail-panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 400px;
+            height: 100%;
+            background: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .detail-panel.open {
+            transform: translateX(0);
+        }
+
+        .close-panel-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+
+        /* Card Styles */
+        .municipio-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .municipio-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h4 {
+            margin: 0;
+            color: var(--secondary-color);
+        }
+
+        .card-summary {
+            padding: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .card-details {
+            padding: 0 15px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+
+        .card-details.expanded {
+            padding: 15px;
+            max-height: 1000px;
+        }
+
+        .detail-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr auto;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .toggle-details {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            cursor: pointer;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .toggle-details:hover {
+            text-decoration: underline;
+        }
+
+        /* Modal Table Styles */
+        .modal-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .modal-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .modal-table th, .modal-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        /* Panel Styles */
+        .panel-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .panel-summary .summary-card {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .panel-summary .summary-title {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .panel-summary .summary-value {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .panel-items {
+            margin-top: 20px;
+        }
+
+        .panel-item {
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .item-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .item-details div {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .item-details span {
+            color: #7f8c8d;
+        }
+
+        /* Responsive Adjustments */
         @media (max-width: 768px) {
-            .container {
-                padding: 15px;
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
             }
             
-            th, td {
-                padding: 8px 10px;
-                font-size: 14px;
+            .detail-panel {
+                width: 90%;
             }
             
-            button {
-                padding: 10px 15px;
-                font-size: 13px;
-            }
-            
-            .filters {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .filter-item {
-                min-width: 100%;
-            }
-            
-            .summary-cards {
+            .card-summary {
                 grid-template-columns: 1fr;
             }
             
-            .tabs {
-                flex-wrap: wrap;
-            }
-            
-            .tab {
-                padding: 8px 15px;
-                font-size: 14px;
-            }
-            
-            .reminder-cards {
-                grid-template-columns: 1fr;
-            }
-            
-            .graph-filters {
-                flex-direction: column;
+            .detail-item {
+                grid-template-columns: 1fr 1fr;
             }
         }
     </style>
@@ -707,6 +1012,21 @@
             <div class="loading-spinner"></div>
             <p>Processando, por favor aguarde...</p>
         </div>
+    </div>
+
+    <!-- Modal de Detalhes -->
+    <div id="detailModal" class="detail-modal">
+        <div class="detail-modal-content">
+            <span class="close-detail-modal">&times;</span>
+            <h3 id="modalTitle">Detalhes do Município</h3>
+            <div class="modal-body" id="modalContent"></div>
+        </div>
+    </div>
+
+    <!-- Painel Lateral -->
+    <div id="detailPanel" class="detail-panel">
+        <button id="closePanelBtn" class="close-panel-btn">&times;</button>
+        <div id="detailPanelContent"></div>
     </div>
 
     <div class="container">
@@ -816,7 +1136,7 @@
                 </div>
             </div>
             
-            <div class="summary-cards">
+            <div class="summary-grid">
                 <div class="summary-card">
                     <div class="summary-title">
                         <i class="fas fa-calculator"></i> Total Base de Cálculo
@@ -863,9 +1183,6 @@
                 <button id="saveDataBtn" class="success">
                     <i class="fas fa-save"></i> Salvar Dados
                 </button>
-                <button id="deleteBatchBtn" class="danger" disabled>
-                    <i class="fas fa-trash-alt"></i> Excluir Selecionados
-                </button>
             </div>
             
             <div class="payment-reminder">
@@ -886,7 +1203,7 @@
             <table id="dataTable">
                 <thead>
                     <tr>
-                        <th width="40px"><input type="checkbox" id="selectAll"></th>
+                        <th></th>
                         <th>Empresa</th>
                         <th>Município/Estado</th>
                         <th>Competência</th>
@@ -913,7 +1230,7 @@
         <div class="tab-content" id="reports-tab">
             <h2><i class="fas fa-file-alt"></i> Relatórios Personalizados</h2>
             
-            <div class="summary-cards">
+            <div class="summary-grid">
                 <div class="summary-card">
                     <div class="summary-title">
                         <i class="fas fa-file-excel"></i> Relatório Completo
@@ -958,13 +1275,13 @@
         
         <div class="tab-content" id="calendar-tab">
             <h2><i class="fas fa-calendar"></i> Calendário de Pagamentos</h2>
-            <div id="calendarContainer" style="margin-top: 20px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+            <div id="calendarContainer">
+                <div class="calendar-header">
                     <button id="prevMonthBtn"><i class="fas fa-chevron-left"></i> Mês Anterior</button>
                     <h3 id="currentMonthYear">Julho 2023</h3>
                     <button id="nextMonthBtn">Próximo Mês <i class="fas fa-chevron-right"></i></button>
                 </div>
-                <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;">
+                <div id="calendarGrid">
                     <!-- Calendar will be generated here -->
                 </div>
             </div>
@@ -1153,8 +1470,7 @@
             const nextMonthBtn = document.getElementById('nextMonthBtn');
             const calendarGrid = document.getElementById('calendarGrid');
             const updateGraphsBtn = document.getElementById('updateGraphsBtn');
-            const deleteBatchBtn = document.getElementById('deleteBatchBtn');
-            const selectAllCheckbox = document.getElementById('selectAll');
+            const closePanelBtn = document.getElementById('closePanelBtn');
             
             // Variáveis de estado
             let selectedCompany = null;
@@ -1818,7 +2134,7 @@
                 processExcel(selectedFile, selectedCompany);
             });
 
-            // 4. FUNÇÃO PRINCIPAL DE PROCESSAMENTO (ATUALIZADA)
+            // 4. FUNÇÃO PRINCIPAL DE PROCESSAMENTO
             function processExcel(file, company) {
                 const reader = new FileReader();
                 
@@ -1850,18 +2166,8 @@
                             let competencia = item.competencia;
                             if (!competencia) competencia = new Date().toLocaleDateString('pt-BR');
                             
-                            // CORREÇÃO DO ERRO: Tratamento robusto do status
-                            let status = 'pendente'; // Valor padrão
-                            if (item.status) {
-                                const statusStr = String(item.status).toLowerCase();
-                                if (statusStr === 'ponderto' || statusStr === 'pendeiro') {
-                                    status = 'pendente';
-                                } else if (statusStr === 'pago') {
-                                    status = 'pago';
-                                } else if (statusStr === 'proximo') {
-                                    status = 'proximo';
-                                }
-                            }
+                            // Corrigir status
+                            const status = item.status && item.status.toLowerCase() === 'ponderto' ? 'pendente' : 'pendente';
                             
                             // Calcular valores
                             const baseCalculo = parseFloat(item.baseCalculo) || 0;
@@ -1877,7 +2183,7 @@
                                 valorISS: valorISS,
                                 aliquota: aliquota,
                                 status: status,
-                                vencimento: municipioInfo.vencimento.toString(), // Apenas o dia
+                                vencimento: calculateDueDate(competencia, item.municipioCodigo),
                                 diaVencimento: municipioInfo.vencimento,
                                 arquivo: file.name,
                                 dataImportacao: new Date().toLocaleString('pt-BR')
@@ -1918,15 +2224,9 @@
                 if (!competencia) return 'A DEFINIR';
                 
                 try {
-                    // Extrair mês e ano da competência
-                    const [dia, mes, ano] = competencia.split('/');
-                    
-                    // Obter dia do vencimento do município
+                    // Extrair apenas o dia do vencimento do município
                     const municipio = municipiosVencimento[municipioCodigo] || {vencimento: 10};
-                    const diaVencimento = municipio.vencimento;
-                    
-                    // Retornar APENAS O DIA do vencimento
-                    return diaVencimento.toString();
+                    return `${municipio.vencimento}`; // Retorna apenas o dia
                 } catch (e) {
                     console.warn("Erro ao calcular vencimento", e);
                     return 'A DEFINIR';
@@ -2117,18 +2417,17 @@
                     return;
                 }
 
-                // Agrupar dados por município
+                // Agrupar dados por município e empresa
                 const groupedData = filteredData.reduce((acc, item) => {
-                    const key = item.municipio;
+                    const key = `${item.municipio}_${item.empresa}`;
                     if (!acc[key]) {
                         acc[key] = {
                             municipio: item.municipio,
                             empresa: item.empresa,
-                            competencia: item.competencia,
+                            municipioCodigo: item.municipioCodigo,
                             baseCalculo: 0,
                             valorISS: 0,
-                            items: [],
-                            expanded: false
+                            items: []
                         };
                     }
                     acc[key].baseCalculo += item.baseCalculo;
@@ -2139,52 +2438,14 @@
 
                 const groupedArray = Object.values(groupedData);
                 
-                groupedArray.forEach((group, index) => {
-                    // Linha principal (agrupada)
-                    const mainRow = dataTable.insertRow();
-                    mainRow.classList.add('group-row');
-                    mainRow.dataset.groupIndex = index;
+                groupedArray.forEach((group) => {
+                    // Criar card para cada grupo
+                    const cardRow = dataTable.insertRow();
+                    const cardCell = cardRow.insertCell();
+                    cardCell.colSpan = 10;
                     
-                    // Célula com checkbox para seleção em lote
-                    const checkboxCell = mainRow.insertCell();
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.className = 'row-checkbox';
-                    checkbox.dataset.groupIndex = index;
-                    checkboxCell.appendChild(checkbox);
-                    
-                    // Empresa
-                    mainRow.insertCell().textContent = group.empresa;
-                    
-                    // Município
-                    const municipioCell = mainRow.insertCell();
-                    municipioCell.textContent = group.municipio || '-';
-                    
-                    // Competência
-                    mainRow.insertCell().textContent = group.competencia || '-';
-                    
-                    // Vencimento (apenas o dia)
-                    const vencimentoCell = mainRow.insertCell();
-                    vencimentoCell.textContent = group.items[0].vencimento || '-';
-                    
-                    // Base de Cálculo
-                    const baseCell = mainRow.insertCell();
-                    baseCell.textContent = formatCurrency(group.baseCalculo);
-                    baseCell.className = group.baseCalculo < 0 ? 'negative' : 'positive';
-                    
-                    // Valor ISS
-                    const issCell = mainRow.insertCell();
-                    issCell.textContent = formatCurrency(group.valorISS);
-                    issCell.className = group.valorISS < 0 ? 'negative' : 'positive';
-                    
-                    // Alíquota (média ponderada)
-                    const aliquotaCell = mainRow.insertCell();
-                    aliquotaCell.textContent = calculateAliquota(group.baseCalculo, group.valorISS);
-                    aliquotaCell.className = 'aliquota';
-                    
-                    // Status (mostra o status mais crítico do grupo)
-                    const statusCell = mainRow.insertCell();
-                    const statusBadge = document.createElement('span');
+                    const card = document.createElement('div');
+                    card.className = 'municipio-card';
                     
                     // Determinar o status mais crítico do grupo
                     let worstStatus = 'pago';
@@ -2193,190 +2454,236 @@
                         else if (item.status === 'proximo' && worstStatus !== 'pendente') worstStatus = 'proximo';
                     });
                     
-                    statusBadge.className = `status-badge status-${worstStatus}`;
-                    statusBadge.textContent = worstStatus === 'pago' ? 'Pago' : 
-                                             worstStatus === 'proximo' ? 'Próximo' : 'Pendente';
-                    statusCell.appendChild(statusBadge);
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <h4>${group.municipio} - ${group.empresa}</h4>
+                            <span class="status-badge status-${worstStatus}">
+                                ${worstStatus === 'pago' ? 'Pago' : worstStatus === 'proximo' ? 'Próximo' : 'Pendente'}
+                            </span>
+                        </div>
+                        <div class="card-summary">
+                            <div><strong>Base:</strong> ${formatCurrency(group.baseCalculo)}</div>
+                            <div><strong>ISS:</strong> ${formatCurrency(group.valorISS)}</div>
+                            <div><strong>Alíquota:</strong> ${calculateAliquota(group.baseCalculo, group.valorISS)}</div>
+                            <button class="toggle-details">
+                                <i class="fas fa-chevron-down"></i> Detalhes
+                            </button>
+                            <button class="view-modal" title="Ver em tela cheia">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                            <button class="view-panel" title="Abrir no painel">
+                                <i class="fas fa-columns"></i>
+                            </button>
+                        </div>
+                        <div class="card-details">
+                            <div class="detail-item detail-header">
+                                <div>Competência</div>
+                                <div>Vencimento</div>
+                                <div>Base Cálculo</div>
+                                <div>Valor ISS</div>
+                                <div>Alíquota</div>
+                                <div>Status</div>
+                            </div>
+                            ${group.items.map(item => `
+                                <div class="detail-item">
+                                    <div>${item.competencia || '-'}</div>
+                                    <div>${item.vencimento || '-'}</div>
+                                    <div class="${item.baseCalculo < 0 ? 'negative' : 'positive'}">
+                                        ${formatCurrency(item.baseCalculo)}
+                                    </div>
+                                    <div class="${item.valorISS < 0 ? 'negative' : 'positive'}">
+                                        ${formatCurrency(item.valorISS)}
+                                    </div>
+                                    <div class="aliquota">${item.aliquota}</div>
+                                    <div>
+                                        <span class="status-badge status-${item.status}">
+                                            ${item.status === 'pago' ? 'Pago' : item.status === 'proximo' ? 'Próximo' : 'Pendente'}
+                                        </span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
                     
-                    // Ações
-                    const actionsCell = mainRow.insertCell();
-                    const expandButton = document.createElement('button');
-                    expandButton.className = 'secondary';
-                    expandButton.innerHTML = '<i class="fas fa-eye"></i> Detalhes';
-                    expandButton.onclick = (e) => {
+                    cardCell.appendChild(card);
+                    
+                    // Event Listeners para o card
+                    const toggleBtn = card.querySelector('.toggle-details');
+                    const modalBtn = card.querySelector('.view-modal');
+                    const panelBtn = card.querySelector('.view-panel');
+                    const detailsSection = card.querySelector('.card-details');
+                    
+                    toggleBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        toggleGroupDetails(index);
-                    };
-                    actionsCell.appendChild(expandButton);
+                        detailsSection.classList.toggle('expanded');
+                        
+                        const icon = toggleBtn.querySelector('i');
+                        if (detailsSection.classList.contains('expanded')) {
+                            icon.classList.remove('fa-chevron-down');
+                            icon.classList.add('fa-chevron-up');
+                            toggleBtn.innerHTML = '<i class="fas fa-chevron-up"></i> Ocultar';
+                        } else {
+                            icon.classList.remove('fa-chevron-up');
+                            icon.classList.add('fa-chevron-down');
+                            toggleBtn.innerHTML = '<i class="fas fa-chevron-down"></i> Detalhes';
+                        }
+                    });
                     
-                    // Adicionar evento de clique na linha inteira
-                    mainRow.onclick = () => toggleGroupDetails(index);
+                    modalBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        showMunicipioModal(group);
+                    });
                     
-                    // Linhas detalhadas (inicialmente ocultas)
-                    group.items.forEach((item, itemIndex) => {
-                        const detailRow = dataTable.insertRow();
-                        detailRow.classList.add('detail-row');
-                        detailRow.dataset.groupIndex = index;
-                        
-                        // Célula com checkbox para seleção em lote
-                        const detailCheckboxCell = detailRow.insertCell();
-                        const detailCheckbox = document.createElement('input');
-                        detailCheckbox.type = 'checkbox';
-                        detailCheckbox.className = 'row-checkbox';
-                        detailCheckbox.dataset.index = importedData.indexOf(item);
-                        detailCheckboxCell.appendChild(detailCheckbox);
-                        
-                        // Empresa
-                        detailRow.insertCell().textContent = item.empresa;
-                        
-                        // Município
-                        detailRow.insertCell().textContent = item.municipio || '-';
-                        
-                        // Competência detalhada
-                        detailRow.insertCell().textContent = item.competencia || '-';
-                        
-                        // Vencimento detalhado (apenas o dia)
-                        const detailVencimentoCell = detailRow.insertCell();
-                        detailVencimentoCell.textContent = item.vencimento || '-';
-                        
-                        // Base de Cálculo detalhada
-                        const detailBaseCell = detailRow.insertCell();
-                        detailBaseCell.textContent = formatCurrency(item.baseCalculo);
-                        detailBaseCell.className = item.baseCalculo < 0 ? 'negative' : 'positive';
-                        
-                        // Valor ISS detalhado
-                        const detailIssCell = detailRow.insertCell();
-                        detailIssCell.textContent = formatCurrency(item.valorISS);
-                        detailIssCell.className = item.valorISS < 0 ? 'negative' : 'positive';
-                        
-                        // Alíquota detalhada
-                        const detailAliquotaCell = detailRow.insertCell();
-                        detailAliquotaCell.textContent = item.aliquota;
-                        detailAliquotaCell.className = 'aliquota';
-                        
-                        // Status detalhado
-                        const detailStatusCell = detailRow.insertCell();
-                        const detailStatusBadge = document.createElement('span');
-                        detailStatusBadge.className = `status-badge status-${item.status}`;
-                        detailStatusBadge.textContent = item.status === 'pago' ? 'Pago' : 
-                                                      item.status === 'proximo' ? 'Próximo' : 'Pendente';
-                        detailStatusCell.appendChild(detailStatusBadge);
-                        
-                        // Ações detalhadas
-                        const detailActionsCell = detailRow.insertCell();
-                        const detailButtonGroup = document.createElement('div');
-                        detailButtonGroup.className = 'button-group';
-                        
-                        const editBtn = document.createElement('button');
-                        editBtn.className = 'secondary';
-                        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-                        editBtn.onclick = () => openEditModal(item);
-                        
-                        const deleteBtn = document.createElement('button');
-                        deleteBtn.className = 'danger';
-                        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
-                        deleteBtn.onclick = () => confirmDelete(item);
-                        
-                        detailButtonGroup.appendChild(editBtn);
-                        detailButtonGroup.appendChild(deleteBtn);
-                        detailActionsCell.appendChild(detailButtonGroup);
+                    panelBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        showMunicipioPanel(group);
                     });
                 });
                 
-                // Configurar seleção em lote
-                setupBatchDelete();
                 updatePagination();
             }
 
-            function toggleGroupDetails(groupIndex) {
-                // Encontrar todas as linhas do grupo
-                const rows = document.querySelectorAll(`tr[data-group-index="${groupIndex}"]`);
+            function showMunicipioModal(group) {
+                const modal = document.getElementById('detailModal');
+                const title = document.getElementById('modalTitle');
+                const content = document.getElementById('modalContent');
                 
-                if (rows.length === 0) return;
+                title.textContent = `Detalhes de ${group.municipio} - ${group.empresa}`;
                 
-                // A primeira linha é a linha principal do grupo
-                const mainRow = rows[0];
+                content.innerHTML = `
+                    <div class="modal-summary">
+                        <div class="summary-item">
+                            <span>Total Base de Cálculo:</span>
+                            <strong>${formatCurrency(group.baseCalculo)}</strong>
+                        </div>
+                        <div class="summary-item">
+                            <span>Total ISS:</span>
+                            <strong>${formatCurrency(group.valorISS)}</strong>
+                        </div>
+                        <div class="summary-item">
+                            <span>Alíquota Média:</span>
+                            <strong>${calculateAliquota(group.baseCalculo, group.valorISS)}</strong>
+                        </div>
+                        <div class="summary-item">
+                            <span>Total Itens:</span>
+                            <strong>${group.items.length}</strong>
+                        </div>
+                    </div>
+                    
+                    <table class="modal-table">
+                        <thead>
+                            <tr>
+                                <th>Competência</th>
+                                <th>Vencimento</th>
+                                <th>Base Cálculo</th>
+                                <th>Valor ISS</th>
+                                <th>Alíquota</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${group.items.map(item => `
+                                <tr>
+                                    <td>${item.competencia || '-'}</td>
+                                    <td>${item.vencimento || '-'}</td>
+                                    <td class="${item.baseCalculo < 0 ? 'negative' : 'positive'}">
+                                        ${formatCurrency(item.baseCalculo)}
+                                    </td>
+                                    <td class="${item.valorISS < 0 ? 'negative' : 'positive'}">
+                                        ${formatCurrency(item.valorISS)}
+                                    </td>
+                                    <td>${item.aliquota}</td>
+                                    <td>
+                                        <span class="status-badge status-${item.status}">
+                                            ${item.status === 'pago' ? 'Pago' : 
+                                              item.status === 'proximo' ? 'Próximo' : 'Pendente'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
                 
-                // Alternar classe expanded
-                mainRow.classList.toggle('expanded');
+                modal.style.display = 'block';
                 
-                // Alternar visibilidade das linhas de detalhe (todas exceto a primeira)
-                for (let i = 1; i < rows.length; i++) {
-                    rows[i].style.display = mainRow.classList.contains('expanded') ? '' : 'none';
-                }
+                // Fechar modal ao clicar no X ou fora
+                document.querySelector('.close-detail-modal').onclick = function() {
+                    modal.style.display = 'none';
+                };
                 
-                // Alternar ícone de expansão
-                const expandIcon = mainRow.querySelector('.expand-icon');
-                if (expandIcon) {
-                    expandIcon.style.transform = mainRow.classList.contains('expanded') 
-                        ? 'rotate(90deg)' 
-                        : 'rotate(0deg)';
-                }
+                window.onclick = function(event) {
+                    if (event.target == modal) {
+                        modal.style.display = 'none';
+                    }
+                };
             }
 
-            function setupBatchDelete() {
-                const checkboxes = document.querySelectorAll('.row-checkbox');
-                const deleteBtn = document.getElementById('deleteBatchBtn');
+            function showMunicipioPanel(group) {
+                const panel = document.getElementById('detailPanel');
+                const panelContent = document.getElementById('detailPanelContent');
                 
-                // Selecionar todos
-                selectAllCheckbox.addEventListener('change', function() {
-                    const isChecked = this.checked;
-                    checkboxes.forEach(checkbox => {
-                        checkbox.checked = isChecked;
-                    });
-                    deleteBtn.disabled = !isChecked;
-                });
-                
-                // Verificar seleção individual
-                checkboxes.forEach(checkbox => {
-                    checkbox.addEventListener('change', function() {
-                        const anyChecked = [...document.querySelectorAll('.row-checkbox:checked')].length > 0;
-                        deleteBtn.disabled = !anyChecked;
-                        
-                        // Atualizar checkbox "Selecionar todos"
-                        if (!this.checked) {
-                            selectAllCheckbox.checked = false;
-                        } else {
-                            const allChecked = [...document.querySelectorAll('.row-checkbox:not(#selectAll)')]
-                                .every(cb => cb.checked);
-                            selectAllCheckbox.checked = allChecked;
-                        }
-                    });
-                });
-
-                deleteBtn.addEventListener('click', function() {
-                    const selectedCheckboxes = [...document.querySelectorAll('.row-checkbox:checked:not(#selectAll)')];
+                panelContent.innerHTML = `
+                    <h3>${group.municipio} - ${group.empresa}</h3>
                     
-                    if (selectedCheckboxes.length > 0) {
-                        if (confirm(`Deseja realmente excluir ${selectedCheckboxes.length} registros?`)) {
-                            showGlobalLoading('Excluindo registros...');
-                            
-                            setTimeout(() => {
-                                // Obter índices dos itens selecionados
-                                const indicesToDelete = selectedCheckboxes.map(checkbox => {
-                                    return checkbox.dataset.index 
-                                        ? parseInt(checkbox.dataset.index) 
-                                        : importedData.findIndex(item => 
-                                            checkbox.dataset.groupIndex 
-                                            && item.municipio === filteredData[checkbox.dataset.groupIndex].municipio
-                                        );
-                                }).filter(index => index !== -1);
-                                
-                                // Remover itens do array importedData
-                                importedData = importedData.filter((_, index) => !indicesToDelete.includes(index));
-                                
-                                // Atualizar interface
-                                updateUIAfterImport();
-                                saveDataToStorage();
-                                hideGlobalLoading();
-                                
-                                // Resetar seleção
-                                selectAllCheckbox.checked = false;
-                                deleteBtn.disabled = true;
-                            }, 500);
-                        }
-                    }
-                });
+                    <div class="panel-summary">
+                        <div class="summary-card">
+                            <div class="summary-title">Base de Cálculo</div>
+                            <div class="summary-value">${formatCurrency(group.baseCalculo)}</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-title">Valor ISS</div>
+                            <div class="summary-value">${formatCurrency(group.valorISS)}</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-title">Alíquota Média</div>
+                            <div class="summary-value">${calculateAliquota(group.baseCalculo, group.valorISS)}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel-items">
+                        ${group.items.map(item => `
+                            <div class="panel-item">
+                                <div class="item-header">
+                                    <span>${item.competencia}</span>
+                                    <span class="status-badge status-${item.status}">
+                                        ${item.status === 'pago' ? 'Pago' : 
+                                          item.status === 'proximo' ? 'Próximo' : 'Pendente'}
+                                    </span>
+                                </div>
+                                <div class="item-details">
+                                    <div>
+                                        <span>Vencimento:</span>
+                                        <strong>${item.vencimento || '-'}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Base:</span>
+                                        <strong class="${item.baseCalculo < 0 ? 'negative' : 'positive'}">
+                                            ${formatCurrency(item.baseCalculo)}
+                                        </strong>
+                                    </div>
+                                    <div>
+                                        <span>ISS:</span>
+                                        <strong class="${item.valorISS < 0 ? 'negative' : 'positive'}">
+                                            ${formatCurrency(item.valorISS)}
+                                        </strong>
+                                    </div>
+                                    <div>
+                                        <span>Alíquota:</span>
+                                        <strong>${item.aliquota}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                panel.classList.add('open');
+                
+                // Fechar painel
+                closePanelBtn.onclick = function() {
+                    panel.classList.remove('open');
+                };
             }
 
             function updatePagination() {
@@ -2640,9 +2947,7 @@
                 const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
                 daysOfWeek.forEach(day => {
                     const dayHeader = document.createElement('div');
-                    dayHeader.style.fontWeight = 'bold';
-                    dayHeader.style.textAlign = 'center';
-                    dayHeader.style.padding = '5px';
+                    dayHeader.className = 'calendar-day-header';
                     dayHeader.textContent = day;
                     calendarGrid.appendChild(dayHeader);
                 });
@@ -2656,8 +2961,7 @@
                 const startingDayOfWeek = firstDay.getDay();
                 for (let i = 0; i < startingDayOfWeek; i++) {
                     const emptyDay = document.createElement('div');
-                    emptyDay.style.minHeight = '100px';
-                    emptyDay.style.border = '1px solid #eee';
+                    emptyDay.className = 'calendar-day';
                     calendarGrid.appendChild(emptyDay);
                 }
                 
@@ -2667,16 +2971,18 @@
                     const dateStr = `${day.toString().padStart(2, '0')}/${(month + 1).toString().padStart(2, '0')}/${year}`;
                     
                     const dayCell = document.createElement('div');
-                    dayCell.style.minHeight = '100px';
-                    dayCell.style.border = '1px solid #eee';
-                    dayCell.style.padding = '5px';
-                    dayCell.style.position = 'relative';
+                    dayCell.className = 'calendar-day';
+                    
+                    // Destaque para o dia atual
+                    const today = new Date();
+                    if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                        dayCell.classList.add('today');
+                    }
                     
                     // Número do dia
                     const dayNumber = document.createElement('div');
+                    dayNumber.className = 'calendar-day-number';
                     dayNumber.textContent = day;
-                    dayNumber.style.fontWeight = 'bold';
-                    dayNumber.style.marginBottom = '5px';
                     dayCell.appendChild(dayNumber);
                     
                     // Eventos/pagamentos para este dia
@@ -2691,37 +2997,19 @@
                     });
                     
                     if (payments.length > 0) {
-                        const paymentsList = document.createElement('div');
-                        paymentsList.style.fontSize = '12px';
-                        
                         payments.slice(0, 3).forEach(payment => {
                             const paymentItem = document.createElement('div');
-                            paymentItem.style.marginBottom = '3px';
-                            paymentItem.style.padding = '2px';
-                            paymentItem.style.borderRadius = '3px';
-                            paymentItem.style.backgroundColor = payment.status === 'pago' ? '#e8f8f0' : 
-                                                              payment.status === 'proximo' ? '#fef9e7' : '#fae8e8';
-                            paymentItem.innerHTML = `
-                                <strong>${payment.empresa}</strong>: ${formatCurrency(payment.valorISS)}
-                            `;
-                            paymentsList.appendChild(paymentItem);
+                            paymentItem.className = `calendar-event ${payment.status}`;
+                            paymentItem.textContent = `${payment.empresa}: ${formatCurrency(payment.valorISS)}`;
+                            dayCell.appendChild(paymentItem);
                         });
                         
                         if (payments.length > 3) {
                             const moreItems = document.createElement('div');
+                            moreItems.className = 'calendar-event';
                             moreItems.textContent = `+ ${payments.length - 3} mais`;
-                            moreItems.style.fontSize = '11px';
-                            moreItems.style.color = '#7f8c8d';
-                            paymentsList.appendChild(moreItems);
+                            dayCell.appendChild(moreItems);
                         }
-                        
-                        dayCell.appendChild(paymentsList);
-                    }
-                    
-                    // Destaque para o dia atual
-                    const today = new Date();
-                    if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                        dayCell.style.border = '2px solid var(--primary-color)';
                     }
                     
                     calendarGrid.appendChild(dayCell);
@@ -2811,12 +3099,20 @@
 
             // 7. FUNÇÕES UTILITÁRIAS
             function formatCurrency(value) {
-                return new Intl.NumberFormat('pt-BR', { 
+                // Verificar se o valor é negativo
+                const isNegative = value < 0;
+                const absoluteValue = Math.abs(value);
+                
+                // Formatar o valor absoluto
+                const formatted = new Intl.NumberFormat('pt-BR', { 
                     style: 'currency', 
                     currency: 'BRL',
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
-                }).format(value);
+                }).format(absoluteValue);
+                
+                // Adicionar sinal negativo se necessário
+                return isNegative ? `-${formatted}` : formatted;
             }
 
             function showLoading(show) {
